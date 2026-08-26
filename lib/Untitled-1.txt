@@ -1,0 +1,1560 @@
+import 'package:flutter/material.dart';
+import 'database.dart';
+
+void main() {
+  runApp(const EferApp());
+}
+
+// ============================================================
+// EFER
+// ============================================================
+
+class EferApp extends StatelessWidget {
+  const EferApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'EFER',
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF123B5D),
+        ),
+        scaffoldBackgroundColor: Colors.white,
+      ),
+      home: const InicioEfer(),
+    );
+  }
+}
+
+// ============================================================
+// PRECIOS
+// ============================================================
+
+const Map<String, double> preciosM2 = {
+  'Corredera 2 hojas 25 mono': 80000,
+  'Corredera 2 hojas 25 termo': 120000,
+  'Corredera 2 hojas 5000': 60000,
+  'Fija AL42 mono': 45000,
+  'Fija AL42 termo': 75000,
+  'Proyectante AL42 mono': 70000,
+  'Proyectante AL42 termo': 95000,
+  'Vidrio 4 mm': 25000,
+  'Vidrio 5 mm': 30000,
+  'Termopanel': 45000,
+};
+
+final Map<String, List<String>> productosPorCategoria = {
+  'VENTANAS': [
+    'Corredera 2 hojas 25 mono',
+    'Corredera 2 hojas 25 termo',
+    'Corredera 2 hojas 5000',
+    'Fija AL42 mono',
+    'Fija AL42 termo',
+    'Proyectante AL42 mono',
+    'Proyectante AL42 termo',
+  ],
+  'VIDRIOS': [
+    'Vidrio 4 mm',
+    'Vidrio 5 mm',
+    'Termopanel',
+  ],
+};
+
+// ============================================================
+// INICIO
+// ============================================================
+
+class InicioEfer extends StatelessWidget {
+  const InicioEfer({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(
+                24,
+                35,
+                24,
+                30,
+              ),
+              decoration: const BoxDecoration(
+                color: Color(0xFF123B5D),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(30),
+                  bottomRight: Radius.circular(30),
+                ),
+              ),
+              child: const Column(
+                children: [
+                  Text(
+                    'EFER',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 42,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 4,
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'VIDRIOS & ALUMINIOS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  SizedBox(height: 18),
+                  SizedBox(
+                    width: 70,
+                    child: Divider(
+                      color: Color(0xFF2F80C0),
+                      thickness: 3,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Presupuestos rápidos y profesionales',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 45),
+
+            const Text(
+              '¿Qué quieres hacer?',
+              style: TextStyle(
+                fontSize: 25,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF123B5D),
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 25,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                height: 150,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const NuevoPresupuesto(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color(0xFF123B5D),
+                    foregroundColor: Colors.white,
+                    elevation: 5,
+                    shape: RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.receipt_long,
+                        size: 55,
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'NUEVO PRESUPUESTO',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight:
+                              FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'Ingresar cliente y medidas',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            const Spacer(),
+
+            const Padding(
+              padding: EdgeInsets.only(
+                bottom: 25,
+              ),
+              child: Text(
+                'EFER • Vidrios & Aluminios',
+                style: TextStyle(
+                  color: Colors.grey,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// MODELO DE PRODUCTO
+// ============================================================
+
+class ItemPresupuesto {
+  String? producto;
+
+  final TextEditingController ancho;
+  final TextEditingController alto;
+  final TextEditingController cantidad;
+
+  ItemPresupuesto()
+      : ancho = TextEditingController(),
+        alto = TextEditingController(),
+        cantidad =
+            TextEditingController(text: '1');
+
+  double get metrosCuadrados {
+    final anchoMm = double.tryParse(
+          ancho.text.replaceAll(',', '.'),
+        ) ??
+        0;
+
+    final altoMm = double.tryParse(
+          alto.text.replaceAll(',', '.'),
+        ) ??
+        0;
+
+    final cant = double.tryParse(
+          cantidad.text.replaceAll(',', '.'),
+        ) ??
+        1;
+
+    return (anchoMm / 1000) *
+        (altoMm / 1000) *
+        cant;
+  }
+
+  double get precioM2 {
+    if (producto == null) {
+      return 0;
+    }
+
+    return preciosM2[producto!] ?? 0;
+  }
+
+  double get total {
+    return metrosCuadrados * precioM2;
+  }
+
+  void dispose() {
+    ancho.dispose();
+    alto.dispose();
+    cantidad.dispose();
+  }
+}
+
+// ============================================================
+// NUEVO PRESUPUESTO
+// ============================================================
+
+class NuevoPresupuesto extends StatefulWidget {
+  const NuevoPresupuesto({super.key});
+
+  @override
+  State<NuevoPresupuesto> createState() =>
+      _NuevoPresupuestoState();
+}
+
+class _NuevoPresupuestoState
+    extends State<NuevoPresupuesto> {
+
+  final nombreController =
+      TextEditingController();
+
+  final telefonoController =
+      TextEditingController();
+
+  final correoController =
+      TextEditingController();
+
+  final direccionController =
+      TextEditingController();
+
+  final List<ItemPresupuesto> items = [
+    ItemPresupuesto(),
+  ];
+
+  // ==========================================================
+  // TOTAL GENERAL
+  // ==========================================================
+
+  double get totalGeneral {
+    return items.fold(
+      0,
+      (total, item) => total + item.total,
+    );
+  }
+
+  double get metrosTotales {
+    return items.fold(
+      0,
+      (total, item) =>
+          total + item.metrosCuadrados,
+    );
+  }
+
+  // ==========================================================
+  // AGREGAR PRODUCTO
+  // ==========================================================
+
+  void agregarProducto() {
+    setState(() {
+      items.add(
+        ItemPresupuesto(),
+      );
+    });
+  }
+
+  // ==========================================================
+  // ELIMINAR PRODUCTO
+  // ==========================================================
+
+  void eliminarProducto(int index) {
+    if (items.length == 1) {
+      return;
+    }
+
+    setState(() {
+      items[index].dispose();
+      items.removeAt(index);
+    });
+  }
+
+  // ==========================================================
+  // DISPOSE
+  // ==========================================================
+
+  @override
+  void dispose() {
+    nombreController.dispose();
+    telefonoController.dispose();
+    correoController.dispose();
+    direccionController.dispose();
+
+    for (final item in items) {
+      item.dispose();
+    }
+
+    super.dispose();
+  }
+
+  // ==========================================================
+  // FORMATO DINERO
+  // ==========================================================
+
+  String dinero(double valor) {
+    return '\$${valor.toStringAsFixed(0)}'
+        .replaceAllMapped(
+      RegExp(
+        r'(\d)(?=(\d{3})+(?!\d))',
+      ),
+      (match) =>
+          '${match.group(1)}.',
+    );
+  }
+
+  // ==========================================================
+  // GUARDAR PRESUPUESTO
+  // ==========================================================
+
+  Future<void> _guardarPresupuesto() async {
+
+    // --------------------------------------------------------
+    // VALIDAR CLIENTE
+    // --------------------------------------------------------
+
+    if (nombreController.text
+        .trim()
+        .isEmpty) {
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Ingresa el nombre del cliente',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    // --------------------------------------------------------
+    // OBTENER NUMERO
+    // --------------------------------------------------------
+
+    final numero =
+        await EferDatabase.instance
+            .obtenerSiguienteNumero();
+
+    if (!mounted) {
+      return;
+    }
+
+    // --------------------------------------------------------
+    // FECHA Y HORA ACTUAL
+    // --------------------------------------------------------
+
+    final ahora = DateTime.now();
+
+    final fecha =
+        '${ahora.day.toString().padLeft(2, '0')}/'
+        '${ahora.month.toString().padLeft(2, '0')}/'
+        '${ahora.year}';
+
+    final hora =
+        '${ahora.hour.toString().padLeft(2, '0')}:'
+        '${ahora.minute.toString().padLeft(2, '0')}';
+
+    // --------------------------------------------------------
+    // CALCULOS
+    // --------------------------------------------------------
+
+    final subtotal = totalGeneral;
+
+    final iva = subtotal * 0.19;
+
+    final total = subtotal + iva;
+
+    // --------------------------------------------------------
+    // PRODUCTOS
+    // --------------------------------------------------------
+
+    final productos = items
+        .where(
+          (item) =>
+              item.producto != null,
+        )
+        .map(
+          (item) {
+            return {
+              'producto': item.producto!,
+
+              'ancho':
+                  double.tryParse(
+                    item.ancho.text
+                        .replaceAll(
+                          ',',
+                          '.',
+                        ),
+                  ) ??
+                  0,
+
+              'alto':
+                  double.tryParse(
+                    item.alto.text
+                        .replaceAll(
+                          ',',
+                          '.',
+                        ),
+                  ) ??
+                  0,
+
+              'cantidad':
+                  double.tryParse(
+                    item.cantidad.text
+                        .replaceAll(
+                          ',',
+                          '.',
+                        ),
+                  ) ??
+                  1,
+
+              'metrosCuadrados':
+                  item.metrosCuadrados,
+
+              'precioM2':
+                  item.precioM2,
+
+              'total':
+                  item.total,
+            };
+          },
+        )
+        .toList();
+
+    // --------------------------------------------------------
+    // VALIDAR PRODUCTOS
+    // --------------------------------------------------------
+
+    if (productos.isEmpty) {
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Agrega al menos un producto',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    // --------------------------------------------------------
+    // GUARDAR EN BASE DE DATOS
+    // --------------------------------------------------------
+
+    await EferDatabase.instance
+        .guardarPresupuestoCompleto(
+      numero: numero,
+      fecha: fecha,
+      hora: hora,
+      nombreCliente:
+          nombreController.text.trim(),
+      telefono:
+          telefonoController.text.trim(),
+      correo:
+          correoController.text.trim(),
+      direccion:
+          direccionController.text.trim(),
+      subtotal: subtotal,
+      iva: iva,
+      total: total,
+      productos: productos,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    // --------------------------------------------------------
+    // MOSTRAR CONFIRMACION
+    // --------------------------------------------------------
+
+    await showDialog(
+      context: context,
+      builder: (dialogContext) {
+
+        return AlertDialog(
+          title: const Text(
+            'Presupuesto guardado',
+          ),
+
+          content: Text(
+            'Presupuesto Nº $numero\n\n'
+            'Fecha: $fecha\n'
+            'Hora: $hora\n\n'
+            'Subtotal: '
+            '${dinero(subtotal)}\n'
+            'IVA 19%: '
+            '${dinero(iva)}\n'
+            'TOTAL: '
+            '${dinero(total)}',
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(
+                  dialogContext,
+                );
+              },
+              child: const Text(
+                'OK',
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ==========================================================
+  // PANTALLA
+  // ==========================================================
+
+  @override
+  Widget build(BuildContext context) {
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Nuevo presupuesto',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor:
+            const Color(0xFF123B5D),
+        foregroundColor: Colors.white,
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+
+          children: [
+
+            // ==================================================
+            // DATOS CLIENTE
+            // ==================================================
+
+            const Text(
+              'DATOS DEL CLIENTE',
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight:
+                    FontWeight.bold,
+                color:
+                    Color(0xFF123B5D),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            campo(
+              'Nombre',
+              'Nombre del cliente',
+              nombreController,
+              Icons.person,
+            ),
+
+            campo(
+              'Teléfono',
+              '+56 9 1234 5678',
+              telefonoController,
+              Icons.phone,
+              tipo:
+                  TextInputType.phone,
+            ),
+
+            campo(
+              'Correo',
+              'correo@ejemplo.cl',
+              correoController,
+              Icons.email,
+              tipo:
+                  TextInputType.emailAddress,
+            ),
+
+            campo(
+              'Dirección',
+              'Dirección del proyecto',
+              direccionController,
+              Icons.location_on,
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // PRODUCTOS
+            // ==================================================
+
+            const Text(
+              'PRODUCTOS',
+              style: TextStyle(
+                fontSize: 19,
+                fontWeight:
+                    FontWeight.bold,
+                color:
+                    Color(0xFF123B5D),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            ...List.generate(
+              items.length,
+              (index) =>
+                  construirProducto(index),
+            ),
+
+            const SizedBox(height: 10),
+
+            // ==================================================
+            // AGREGAR PRODUCTO
+            // ==================================================
+
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+
+              child:
+                  OutlinedButton.icon(
+                onPressed:
+                    agregarProducto,
+
+                icon: const Icon(
+                  Icons.add,
+                ),
+
+                label: const Text(
+                  'AGREGAR PRODUCTO',
+                  style: TextStyle(
+                    fontWeight:
+                        FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+
+                style:
+                    OutlinedButton.styleFrom(
+                  foregroundColor:
+                      const Color(
+                        0xFF123B5D,
+                      ),
+
+                  side:
+                      const BorderSide(
+                    color: Color(
+                      0xFF123B5D,
+                    ),
+                    width: 2,
+                  ),
+
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      15,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // RESUMEN
+            // ==================================================
+
+            Container(
+              width: double.infinity,
+
+              padding:
+                  const EdgeInsets.all(
+                20,
+              ),
+
+              decoration:
+                  BoxDecoration(
+                color:
+                    const Color(
+                  0xFFEAF2F8,
+                ),
+
+                borderRadius:
+                    BorderRadius.circular(
+                  20,
+                ),
+              ),
+
+              child: Column(
+                children: [
+
+                  const Text(
+                    'RESUMEN DEL PRESUPUESTO',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight:
+                          FontWeight.bold,
+                      color:
+                          Color(
+                        0xFF123B5D,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 18,
+                  ),
+
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
+
+                    children: [
+                      const Text(
+                        'Productos',
+                      ),
+
+                      Text(
+                        '${items.length}',
+                        style:
+                            const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(
+                    height: 8,
+                  ),
+
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
+
+                    children: [
+                      const Text(
+                        'Superficie total',
+                      ),
+
+                      Text(
+                        '${metrosTotales.toStringAsFixed(2)} m²',
+
+                        style:
+                            const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Divider(
+                    height: 25,
+                  ),
+
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
+
+                    children: [
+                      const Text(
+                        'SUBTOTAL',
+                        style:
+                            TextStyle(
+                          fontSize: 18,
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      Text(
+                        dinero(
+                          totalGeneral,
+                        ),
+
+                        style:
+                            const TextStyle(
+                          fontSize: 18,
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(
+                    height: 8,
+                  ),
+
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
+
+                    children: [
+                      const Text(
+                        'IVA 19%',
+                      ),
+
+                      Text(
+                        dinero(
+                          totalGeneral *
+                              0.19,
+                        ),
+
+                        style:
+                            const TextStyle(
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const Divider(
+                    height: 25,
+                  ),
+
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
+
+                    children: [
+                      const Text(
+                        'TOTAL',
+                        style:
+                            TextStyle(
+                          fontSize: 21,
+                          fontWeight:
+                              FontWeight.bold,
+                        ),
+                      ),
+
+                      Text(
+                        dinero(
+                          totalGeneral +
+                              (totalGeneral *
+                                  0.19),
+                        ),
+
+                        style:
+                            const TextStyle(
+                          fontSize: 23,
+                          fontWeight:
+                              FontWeight.bold,
+                          color:
+                              Color(
+                            0xFF123B5D,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            // ==================================================
+            // GENERAR PRESUPUESTO
+            // ==================================================
+
+            SizedBox(
+              width: double.infinity,
+              height: 60,
+
+              child:
+                  ElevatedButton.icon(
+                onPressed:
+                    _guardarPresupuesto,
+
+                icon: const Icon(
+                  Icons.receipt_long,
+                ),
+
+                label: const Text(
+                  'GENERAR PRESUPUESTO',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                style:
+                    ElevatedButton.styleFrom(
+                  backgroundColor:
+                      const Color(
+                    0xFF123B5D,
+                  ),
+
+                  foregroundColor:
+                      Colors.white,
+
+                  shape:
+                      RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      15,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(
+              height: 30,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================
+  // TARJETA PRODUCTO
+  // ==========================================================
+
+  Widget construirProducto(
+    int index,
+  ) {
+
+    final item = items[index];
+
+    return Card(
+      margin:
+          const EdgeInsets.only(
+        bottom: 18,
+      ),
+
+      elevation: 3,
+
+      shape:
+          RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.circular(
+          18,
+        ),
+      ),
+
+      child: Padding(
+        padding:
+            const EdgeInsets.all(
+          16,
+        ),
+
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+
+          children: [
+
+            Row(
+              children: [
+
+                Text(
+                  'PRODUCTO ${index + 1}',
+
+                  style:
+                      const TextStyle(
+                    fontSize: 16,
+                    fontWeight:
+                        FontWeight.bold,
+                    color:
+                        Color(
+                      0xFF123B5D,
+                    ),
+                  ),
+                ),
+
+                const Spacer(),
+
+                if (items.length > 1)
+
+                  IconButton(
+                    onPressed: () {
+                      eliminarProducto(
+                        index,
+                      );
+                    },
+
+                    icon:
+                        const Icon(
+                      Icons.delete_outline,
+                      color:
+                          Colors.red,
+                    ),
+                  ),
+              ],
+            ),
+
+            const SizedBox(
+              height: 10,
+            ),
+
+            // --------------------------------------------------
+            // PRODUCTO
+            // --------------------------------------------------
+
+            InkWell(
+              onTap: () async {
+
+                final producto =
+                    await seleccionarProducto();
+
+                if (!mounted) {
+                  return;
+                }
+
+                if (producto != null) {
+
+                  setState(() {
+                    item.producto =
+                        producto;
+                  });
+                }
+              },
+
+              child:
+                  InputDecorator(
+                decoration:
+                    InputDecoration(
+                  labelText:
+                      'Producto',
+
+                  prefixIcon:
+                      const Icon(
+                    Icons.window,
+                  ),
+
+                  suffixIcon:
+                      const Icon(
+                    Icons.arrow_drop_down,
+                  ),
+
+                  border:
+                      OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(
+                      14,
+                    ),
+                  ),
+                ),
+
+                child: Text(
+                  item.producto ??
+                      'Seleccionar producto',
+
+                  style: TextStyle(
+                    color:
+                        item.producto ==
+                                null
+                            ? Colors.grey
+                            : Colors.black,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(
+              height: 14,
+            ),
+
+            // --------------------------------------------------
+            // MEDIDAS
+            // --------------------------------------------------
+
+            Row(
+              children: [
+
+                Expanded(
+                  child: campo(
+                    'Ancho (mm)',
+                    '1200',
+                    item.ancho,
+                    Icons.straighten,
+
+                    tipo:
+                        const TextInputType
+                            .numberWithOptions(
+                      decimal: true,
+                    ),
+
+                    onChanged: () {
+                      setState(
+                        () {},
+                      );
+                    },
+                  ),
+                ),
+
+                const SizedBox(
+                  width: 12,
+                ),
+
+                Expanded(
+                  child: campo(
+                    'Alto (mm)',
+                    '1200',
+                    item.alto,
+                    Icons.height,
+
+                    tipo:
+                        const TextInputType
+                            .numberWithOptions(
+                      decimal: true,
+                    ),
+
+                    onChanged: () {
+                      setState(
+                        () {},
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            campo(
+              'Cantidad',
+              '1',
+              item.cantidad,
+              Icons.numbers,
+
+              tipo:
+                  TextInputType.number,
+
+              onChanged: () {
+                setState(
+                  () {},
+                );
+              },
+            ),
+
+            // --------------------------------------------------
+            // TOTAL PRODUCTO
+            // --------------------------------------------------
+
+            if (item.producto != null)
+
+              Container(
+                margin:
+                    const EdgeInsets.only(
+                  top: 5,
+                ),
+
+                padding:
+                    const EdgeInsets.all(
+                  14,
+                ),
+
+                decoration:
+                    BoxDecoration(
+                  color:
+                      const Color(
+                    0xFFF4F7F9,
+                  ),
+
+                  borderRadius:
+                      BorderRadius.circular(
+                    12,
+                  ),
+                ),
+
+                child: Column(
+                  children: [
+
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .spaceBetween,
+
+                      children: [
+                        const Text(
+                          'Superficie',
+                        ),
+
+                        Text(
+                          '${item.metrosCuadrados.toStringAsFixed(2)} m²',
+
+                          style:
+                              const TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(
+                      height: 7,
+                    ),
+
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .spaceBetween,
+
+                      children: [
+                        const Text(
+                          'Valor m²',
+                        ),
+
+                        Text(
+                          dinero(
+                            item.precioM2,
+                          ),
+
+                          style:
+                              const TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const Divider(),
+
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .spaceBetween,
+
+                      children: [
+                        const Text(
+                          'Total',
+                          style:
+                              TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+
+                        Text(
+                          dinero(
+                            item.total,
+                          ),
+
+                          style:
+                              const TextStyle(
+                            fontSize: 18,
+                            fontWeight:
+                                FontWeight.bold,
+                            color:
+                                Color(
+                              0xFF123B5D,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ==========================================================
+  // SELECCIONAR PRODUCTO
+  // ==========================================================
+
+  Future<String?>
+      seleccionarProducto() {
+
+    return showModalBottomSheet<String>(
+      context: context,
+
+      shape:
+          const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(
+          top: Radius.circular(
+            25,
+          ),
+        ),
+      ),
+
+      builder: (context) {
+
+        return SafeArea(
+          child: ListView(
+            padding:
+                const EdgeInsets.all(
+              20,
+            ),
+
+            shrinkWrap: true,
+
+            children: [
+
+              const Text(
+                'SELECCIONAR PRODUCTO',
+
+                style:
+                    TextStyle(
+                  fontSize: 20,
+                  fontWeight:
+                      FontWeight.bold,
+                  color:
+                      Color(
+                    0xFF123B5D,
+                  ),
+                ),
+              ),
+
+              const SizedBox(
+                height: 20,
+              ),
+
+              ...productosPorCategoria
+                  .entries
+                  .expand(
+                (categoria) => [
+
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(
+                      top: 10,
+                      bottom: 8,
+                    ),
+
+                    child: Text(
+                      categoria.key,
+
+                      style:
+                          const TextStyle(
+                        fontSize: 15,
+                        fontWeight:
+                            FontWeight.bold,
+                        color:
+                            Color(
+                          0xFF2F80C0,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  ...categoria.value
+                      .map(
+                    (producto) {
+
+                      return ListTile(
+                        leading:
+                            const Icon(
+                          Icons.window,
+                          color:
+                              Color(
+                            0xFF123B5D,
+                          ),
+                        ),
+
+                        title:
+                            Text(
+                          producto,
+                        ),
+
+                        trailing:
+                            Text(
+                          dinero(
+                            preciosM2[
+                                    producto] ??
+                                0,
+                          ),
+
+                          style:
+                              const TextStyle(
+                            fontWeight:
+                                FontWeight.bold,
+                          ),
+                        ),
+
+                        onTap: () {
+                          Navigator.pop(
+                            context,
+                            producto,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ==========================================================
+  // CAMPO
+  // ==========================================================
+
+  Widget campo(
+    String titulo,
+    String hint,
+    TextEditingController controller,
+    IconData icon, {
+    TextInputType? tipo,
+    VoidCallback? onChanged,
+  }) {
+
+    return Padding(
+      padding:
+          const EdgeInsets.only(
+        bottom: 14,
+      ),
+
+      child: TextField(
+        controller:
+            controller,
+
+        keyboardType:
+            tipo,
+
+        onChanged: (_) {
+
+          if (onChanged != null) {
+            onChanged();
+          }
+        },
+
+        decoration:
+            InputDecoration(
+          labelText:
+              titulo,
+
+          hintText:
+              hint,
+
+          prefixIcon:
+              Icon(icon),
+
+          border:
+              OutlineInputBorder(
+            borderRadius:
+                BorderRadius.circular(
+              14,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
