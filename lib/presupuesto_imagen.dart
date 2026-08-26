@@ -237,17 +237,38 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(12),
 
-              child: Center(
-                child: RepaintBoundary(
-                  key: _imagenKey,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final anchoPantalla = constraints.maxWidth;
 
-                  child: Container(
-                    width: 800,
-                    color: Colors.white,
+                  if (anchoPantalla < 850) {
+                    return Center(
+                      child: FittedBox(
+                        fit: BoxFit.fitWidth,
+                        alignment: Alignment.topCenter,
+                        child: RepaintBoundary(
+                          key: _imagenKey,
+                          child: Container(
+                            width: 800,
+                            color: Colors.white,
+                            child: _documento(),
+                          ),
+                        ),
+                      ),
+                    );
+                  }
 
-                    child: _documento(),
-                  ),
-                ),
+                  return Center(
+                    child: RepaintBoundary(
+                      key: _imagenKey,
+                      child: Container(
+                        width: 800,
+                        color: Colors.white,
+                        child: _documento(),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),
