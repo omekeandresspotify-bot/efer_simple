@@ -4,6 +4,8 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'optimizador_vidrios.dart';
+
 import 'database.dart';
 import 'presupuesto_imagen.dart';
 import 'pauta_fabricacion.dart';
@@ -827,6 +829,49 @@ class FichaFabricacionPage extends StatelessWidget {
 
     return agrupados.values.toList();
   }
+  // ==========================================================
+  // CONVERTIR RESUMEN A PIEZAS PARA OPTIMIZAR
+  // ==========================================================
+
+  List<PiezaVidrio> obtenerPiezasParaOptimizar() {
+    final resumen = obtenerResumenVidrios();
+
+    return resumen.map((vidrio) {
+      return PiezaVidrio(
+        tipo: vidrio['tipo'] as String,
+        ancho: (vidrio['ancho'] as num).toInt(),
+        alto: (vidrio['alto'] as num).toInt(),
+        cantidad: (vidrio['cantidad'] as num).toInt(),
+      );
+    }).toList();
+  }
+
+  // ==========================================================
+  // ABRIR OPTIMIZADOR
+  // ==========================================================
+
+  void abrirOptimizador(BuildContext context) {
+    final piezas = obtenerPiezasParaOptimizar();
+
+    if (piezas.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No hay vidrios para optimizar.')),
+      );
+
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => OptimizadorVidriosPage(
+          numero: numero,
+          nombreCliente: nombreCliente,
+          piezas: piezas,
+        ),
+      ),
+    );
+  }
 
   Future<void> imprimirFicha(BuildContext context) async {
     try {
@@ -1447,6 +1492,40 @@ class FichaFabricacionPage extends StatelessWidget {
 
               label: const Text(
                 'IMPRIMIR CARTA',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF123B5D),
+
+                foregroundColor: Colors.white,
+
+                padding: const EdgeInsets.symmetric(vertical: 13),
+
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // ==================================================
+          // OPTIMIZAR CORTES
+          // ==================================================
+          SizedBox(
+            width: double.infinity,
+
+            child: ElevatedButton.icon(
+              onPressed: () {
+                abrirOptimizador(context);
+              },
+
+              icon: const Icon(Icons.auto_awesome),
+
+              label: const Text(
+                'OPTIMIZAR CORTES',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
 
