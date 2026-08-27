@@ -609,7 +609,6 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
 
                   datos: [
                     'Dirección: ${widget.direccion}',
-                    'Ciudad / Comuna: Pumanque',
                     'Referencia: Presupuesto Nº ${widget.numero}',
                   ],
                 ),
@@ -1041,7 +1040,11 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
             width: 105,
 
             child: Text(
-              dinero(producto.precioM2),
+              dinero(
+                producto.cantidad > 0
+                    ? producto.total / producto.cantidad
+                    : producto.total,
+              ),
 
               textAlign: TextAlign.right,
 
