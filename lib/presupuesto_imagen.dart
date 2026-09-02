@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 class ProductoImagen {
   final String producto;
   final double ancho;
+  final double ancho2;
   final double alto;
   final double cantidad;
   final double metrosCuadrados;
@@ -21,6 +22,7 @@ class ProductoImagen {
   ProductoImagen({
     required this.producto,
     required this.ancho,
+    required this.ancho2,
     required this.alto,
     required this.cantidad,
     required this.metrosCuadrados,
@@ -1004,8 +1006,13 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
 
               children: [
                 Text(
-                  '${producto.ancho.toStringAsFixed(0)} × '
-                  '${producto.alto.toStringAsFixed(0)} mm',
+                  (producto.producto == 'Shower Door Esquinero' ||
+                          producto.producto == 'Shower Door 2 hojas con fijo')
+                      ? '${producto.ancho.toStringAsFixed(0)} × '
+                            '${producto.ancho2.toStringAsFixed(0)} × '
+                            '${producto.alto.toStringAsFixed(0)} mm'
+                      : '${producto.ancho.toStringAsFixed(0)} × '
+                            '${producto.alto.toStringAsFixed(0)} mm',
 
                   style: const TextStyle(
                     fontSize: 13,

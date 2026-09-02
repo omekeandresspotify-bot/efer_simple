@@ -40,6 +40,7 @@ class PautaFabricacion {
   static ResultadoFabricacion generar({
     required String producto,
     required double ancho,
+    double? ancho2,
     required double alto,
     required int cantidadVentanas,
   }) {
@@ -76,6 +77,18 @@ class PautaFabricacion {
 
       case 'Corredera 4 hojas 25 termo':
         return _corredera4Termo(ancho, alto, cantidadVentanas);
+
+      case 'Shower Door 2 hojas':
+        return _showerDoor2Hojas(ancho, alto, cantidadVentanas);
+
+      case 'Shower Door Esquinero':
+        if (ancho2 == null) {
+          throw ArgumentError(
+            'Shower Door Esquinero requiere Ancho 1 y Ancho 2',
+          );
+        }
+
+        return _showerDoorEsquinero(ancho, ancho2, alto, cantidadVentanas);
 
       default:
         throw ArgumentError('Producto sin pauta de fabricación: $producto');
@@ -303,6 +316,70 @@ class PautaFabricacion {
         _c('PI', null, h - 35, 4, q),
         _c('TR', null, h - 35, 4, q),
         _c('CRISTAL', ((a + 20) / 4) - 66, h - 130, 4, q),
+      ],
+    );
+  }
+
+  // ==========================================================
+  // SHOWER DOOR 2 HOJAS
+  // ==========================================================
+
+  static ResultadoFabricacion _showerDoor2Hojas(double a, double h, int q) {
+    return ResultadoFabricacion(
+      producto: 'Shower Door 2 hojas',
+      anchoVentana: a,
+      altoVentana: h,
+      cantidadVentanas: q,
+      cortes: [
+        _c('RS', a, null, 1, q),
+        _c('RI', a - 2, null, 1, q),
+        _c('JA', null, h - 2, 2, q),
+        _c('CA', a / 2 - 5, null, 2, q),
+        _c('ZO', a / 2 - 5, null, 2, q),
+        _c('PI', null, h - 65, 4, q),
+        _c('CRISTAL', a - 30, h - 95, 2, q),
+      ],
+    );
+  }
+
+  // ==========================================================
+  // SHOWER DOOR ESQUINERO
+  // ==========================================================
+
+  static ResultadoFabricacion _showerDoorEsquinero(
+    double a1,
+    double a2,
+    double h,
+    int q,
+  ) {
+    return ResultadoFabricacion(
+      producto: 'Shower Door Esquinero',
+      anchoVentana: a1,
+      altoVentana: h,
+      cantidadVentanas: q,
+      cortes: [
+        // -------------------------------
+        // LADO ANCHO 1
+        // -------------------------------
+
+        _c('RS', a1, null, 1, q),
+        _c('RI', a1 - 2, null, 1, q),
+        _c('JA', null, h - 2, 1, q),
+        _c('CA', a1 / 2 - 5, null, 2, q),
+        _c('ZO', a1 / 2 - 5, null, 2, q),
+        _c('PI', null, h - 65, 4, q),
+        _c('CRISTAL', a1 / 2 - 35, h - 95, 2, q),
+
+        // -------------------------------
+        // LADO ANCHO 2
+        // -------------------------------
+        _c('RS', a2, null, 1, q),
+        _c('RI', a2, null, 1, q),
+        _c('JA', null, h - 2, 1, q),
+        _c('CA', a2 / 2 - 5, null, 2, q),
+        _c('ZO', a2 / 2 - 5, null, 2, q),
+        _c('PI', null, h - 65, 4, q),
+        _c('CRISTAL', a2 / 2 - 35, h - 95, 2, q),
       ],
     );
   }

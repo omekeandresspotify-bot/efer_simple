@@ -4,9 +4,12 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import 'trabajos.dart';
+
 import 'optimizador_vidrios.dart';
 
 import 'database.dart';
+
 import 'presupuesto_imagen.dart';
 import 'pauta_fabricacion.dart';
 
@@ -421,6 +424,35 @@ class _HistorialPageState extends State<HistorialPage> {
                   ),
                 ),
 
+                SizedBox(
+                  width: double.infinity,
+
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      crearTrabajoDesdePresupuesto(presupuesto);
+                    },
+
+                    icon: const Icon(Icons.construction),
+
+                    label: const Text(
+                      'CREAR TRABAJO',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6A35A8),
+
+                      foregroundColor: Colors.white,
+
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 12),
 
                 SizedBox(
@@ -492,6 +524,54 @@ class _HistorialPageState extends State<HistorialPage> {
   }
 
   // ==========================================================
+  // CREAR TRABAJO
+  // ==========================================================
+
+  Future<void> crearTrabajoDesdePresupuesto(
+    Map<String, dynamic> presupuesto,
+  ) async {
+    try {
+      final presupuestoId = presupuesto['id'] as int;
+
+      final clienteId = presupuesto['clienteId'] as int?;
+
+      final trabajoId = await EferDatabase.instance.crearTrabajo(
+        presupuestoId: presupuestoId,
+        clienteId: clienteId,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF6A35A8),
+          content: Text(
+            'Trabajo creado correctamente para el presupuesto Nº '
+            '${presupuesto['numero']}.',
+          ),
+        ),
+      );
+
+      // --------------------------------------------------------
+      // ABRIR DIRECTAMENTE EL TRABAJO
+      // --------------------------------------------------------
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => TrabajoDetallePage(trabajoId: trabajoId),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo crear el trabajo: $e')),
+      );
+    }
+  }
+
+  // ==========================================================
   // ABRIR PRESUPUESTO
   // ==========================================================
 
@@ -510,6 +590,8 @@ class _HistorialPageState extends State<HistorialPage> {
           ancho: (producto['ancho'] as num).toDouble(),
 
           alto: (producto['alto'] as num).toDouble(),
+
+          ancho2: ((producto['ancho2'] ?? 0) as num).toDouble(),
 
           cantidad: (producto['cantidad'] as num).toDouble(),
 
@@ -579,6 +661,7 @@ class _HistorialPageState extends State<HistorialPage> {
         final nombre = producto['producto'] as String;
 
         final ancho = (producto['ancho'] as num).toDouble();
+        final ancho2 = (producto['ancho2'] as num?)?.toDouble() ?? 0;
 
         final alto = (producto['alto'] as num).toDouble();
 
@@ -588,6 +671,7 @@ class _HistorialPageState extends State<HistorialPage> {
           final resultado = PautaFabricacion.generar(
             producto: nombre,
             ancho: ancho,
+            ancho2: ancho2,
             alto: alto,
             cantidadVentanas: cantidad,
           );
