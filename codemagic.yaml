@@ -1,0 +1,39 @@
+workflows:
+  ios-personal:
+    name: LUNIALES iOS Personal
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Instalar dependencias
+        script: |
+          flutter pub get
+
+      - name: Instalar CocoaPods
+        script: |
+          find . -name "Podfile" -execdir pod install \;
+
+      - name: Analizar proyecto
+        script: |
+          flutter analyze
+
+      - name: Construir iOS sin firma
+        script: |
+          flutter build ios --debug --no-codesign
+
+      - name: Crear archivo IPA
+        script: |
+          mkdir -p build/ios/unsigned/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ios/unsigned/Payload/
+          cd build/ios/unsigned
+          zip -r LUNIALES.ipa Payload
+
+    artifacts:
+      - build/ios/unsigned/*.ipa
+      - build/ios/iphoneos/**/*.app
+      - /tmp/xcodebuild_logs/*.log
