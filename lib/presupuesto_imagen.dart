@@ -94,23 +94,51 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
 
   Future<Uint8List?> capturarImagen() async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      // Esperar a que Flutter termine de pintar completamente
+      await WidgetsBinding.instance.endOfFrame;
+
+      // Dar un pequeño margen adicional para iOS
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      if (!mounted) {
+        debugPrint('La pantalla ya no está montada');
+        return null;
+      }
 
       final renderObject = _imagenKey.currentContext?.findRenderObject();
 
       if (renderObject == null) {
+        debugPrint('No se encontró el RenderObject de la imagen');
         return null;
       }
 
-      final boundary = renderObject as RenderRepaintBoundary;
+      if (renderObject is! RenderRepaintBoundary) {
+        debugPrint('El objeto no es RenderRepaintBoundary');
+        return null;
+      }
 
-      final image = await boundary.toImage(pixelRatio: 2.5);
+      final boundary = renderObject;
+
+      // Esperar hasta que el widget esté pintado
+      if (boundary.debugNeedsPaint) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+
+      final image = await boundary.toImage(pixelRatio: 2.0);
 
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
-      return byteData?.buffer.asUint8List();
-    } catch (e) {
+      image.dispose();
+
+      if (byteData == null) {
+        debugPrint('No se pudo obtener PNG');
+        return null;
+      }
+
+      return byteData.buffer.asUint8List();
+    } catch (e, stackTrace) {
       debugPrint('Error generando imagen: $e');
+      debugPrint('$stackTrace');
 
       return null;
     }
