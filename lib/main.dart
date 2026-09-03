@@ -114,7 +114,7 @@ class InicioLuniales extends StatelessWidget {
                     'LUNIALES',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 38,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 3,
                     ),
@@ -153,7 +153,7 @@ class InicioLuniales extends StatelessWidget {
                         SizedBox(width: 7),
 
                         Text(
-                          'EMPRESA: EFER',
+                          'EFER',
                           style: TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -219,170 +219,125 @@ class InicioLuniales extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     // ------------------------------------------
-                    // CLIENTES
+                    // HISTORIAL
                     // ------------------------------------------
-                    _botonModulo(
-                      icono: Icons.people_alt_outlined,
-                      titulo: 'Clientes',
-                      subtitulo: 'Clientes y sus compras',
-                      disponible: true,
+                    _botonPrincipal(
+                      context,
+                      icono: Icons.history,
+                      titulo: 'Historial',
+                      subtitulo: 'Ver presupuestos guardados',
+                      color: const Color(0xFF6A35A8),
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const ClientesPage(),
+                            builder: (_) => const HistorialPage(),
                           ),
                         );
                       },
                     ),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
 
-                    // ------------------------------------------
-                    // TRABAJOS
-                    // ------------------------------------------
-                    _botonModulo(
-                      icono: Icons.construction_outlined,
-                      titulo: 'Trabajos',
-                      subtitulo: 'Seguimiento de trabajos',
-                      disponible: true,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const trabajos.TrabajosPage(),
+                    // ==================================================
+                    // MODULOS
+                    // ==================================================
+                    GridView.count(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+
+                      children: [
+                        // CLIENTES
+                        _botonModuloCuadrado(
+                          icono: Icons.people_alt_outlined,
+                          titulo: 'Clientes',
+                          disponible: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ClientesPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // TRABAJOS
+                        _botonModuloCuadrado(
+                          icono: Icons.construction_outlined,
+                          titulo: 'Trabajos',
+                          disponible: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const trabajos.TrabajosPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // AGENDA
+                        _botonModuloCuadrado(
+                          icono: Icons.calendar_month_outlined,
+                          titulo: 'Agenda',
+                          disponible: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const agenda.AgendaPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // FABRICACIÓN
+                        _botonModuloCuadrado(
+                          icono: Icons.precision_manufacturing_outlined,
+                          titulo: 'Fabricación',
+                          disponible: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const fabricacion.FabricacionPage(),
+                              ),
+                            );
+                          },
+                        ),
+
+                        // FACTURACIÓN
+                        _botonModuloCuadrado(
+                          icono: Icons.receipt_long_outlined,
+                          titulo: 'Facturación',
+                          disponible: false,
+                        ),
+
+                        // ADMINISTRACIÓN
+                        if (rol == 'ADMIN')
+                          _botonModuloCuadrado(
+                            icono: Icons.admin_panel_settings_outlined,
+                            titulo: 'Administración',
+                            disponible: true,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      AdminPage(empresaId: empresaId),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ------------------------------------------
-                    // AGENDA
-                    // ------------------------------------------
-                    _botonModulo(
-                      icono: Icons.calendar_month_outlined,
-                      titulo: 'Agenda',
-                      subtitulo: 'Instalaciones y fechas',
-                      disponible: true,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const agenda.AgendaPage(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ------------------------------------------
-                    // FABRICACIÓN
-                    // ------------------------------------------
-                    _botonModulo(
-                      icono: Icons.precision_manufacturing_outlined,
-                      titulo: 'Fabricación',
-                      subtitulo: 'Pautas, vidrios y cortes',
-                      disponible: true,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const fabricacion.FabricacionPage(),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ------------------------------------------
-                    // FACTURACIÓN
-                    // ------------------------------------------
-                    _botonModulo(
-                      icono: Icons.receipt_long_outlined,
-                      titulo: 'Facturación',
-                      subtitulo: 'Documentos y pagos',
-                      disponible: false,
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // ------------------------------------------
-                    // ADMINISTRACIÓN
-                    // ------------------------------------------
-                    if (rol == 'ADMIN') ...[
-                      _botonModulo(
-                        icono: Icons.admin_panel_settings_outlined,
-                        titulo: 'Administración EFER',
-                        subtitulo: 'Configuración y valores por m²',
-                        disponible: true,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => AdminPage(empresaId: empresaId),
-                            ),
-                          );
-                        },
-                      ),
-
-                      const SizedBox(height: 10),
-                    ],
-                    _botonModulo(
-                      icono: Icons.bar_chart_outlined,
-                      titulo: 'Administración',
-                      subtitulo: 'Ventas, costos y ganancias',
-                      disponible: false,
+                      ],
                     ),
 
                     const SizedBox(height: 15),
-
-                    // ------------------------------------------
-                    // HISTORIAL ACTUAL
-                    // ------------------------------------------
-                    SizedBox(
-                      width: double.infinity,
-
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const HistorialPage(),
-                            ),
-                          );
-                        },
-
-                        icon: const Icon(
-                          Icons.history,
-                          color: Color(0xFF6A35A8),
-                        ),
-
-                        label: const Text(
-                          'HISTORIAL DE PRESUPUESTOS',
-                          style: TextStyle(
-                            color: Color(0xFF6A35A8),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-
-                          side: const BorderSide(
-                            color: Color(0xFF6A35A8),
-                            width: 1.5,
-                          ),
-
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -484,108 +439,92 @@ class InicioLuniales extends StatelessWidget {
   }
 
   // ==========================================================
-  // BOTON MODULO
+  // BOTÓN CUADRADO - MENÚ PRINCIPAL
   // ==========================================================
 
-  static Widget _botonModulo({
-    required IconData icono,
-    required String titulo,
-    required String subtitulo,
-    required bool disponible,
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      width: double.infinity,
+  // ==========================================================
+  // BOTON MODULO
+  // ==========================================================
+}
 
+// ==========================================================
+// BOTON MODULO CUADRADO - MENU PRINCIPAL
+// ==========================================================
+
+Widget _botonModuloCuadrado({
+  required IconData icono,
+  required String titulo,
+  required bool disponible,
+  VoidCallback? onTap,
+}) {
+  return AspectRatio(
+    aspectRatio: 1,
+    child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE3DCEB)),
       ),
-
       child: Material(
         color: Colors.transparent,
-
         child: InkWell(
           onTap: disponible ? onTap : null,
-          borderRadius: BorderRadius.circular(16),
-
+          borderRadius: BorderRadius.circular(18),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-
-            child: Row(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 48,
-                  height: 48,
-
+                  width: 52,
+                  height: 52,
                   decoration: BoxDecoration(
                     color: const Color(0xFFF0EAF7),
-                    borderRadius: BorderRadius.circular(13),
+                    borderRadius: BorderRadius.circular(15),
                   ),
-
-                  child: Icon(icono, color: const Color(0xFF6A35A8), size: 25),
+                  child: Icon(icono, color: const Color(0xFF6A35A8), size: 28),
                 ),
 
-                const SizedBox(width: 13),
+                const SizedBox(height: 10),
 
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-
-                    children: [
-                      Text(
-                        titulo,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3F245F),
-                        ),
-                      ),
-
-                      const SizedBox(height: 3),
-
-                      Text(
-                        subtitulo,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
+                Text(
+                  titulo,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3F245F),
                   ),
                 ),
 
-                if (disponible)
-                  const Icon(Icons.chevron_right, color: Color(0xFF6A35A8))
-                else
+                if (!disponible) ...[
+                  const SizedBox(height: 7),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 9,
-                      vertical: 5,
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-
                     decoration: BoxDecoration(
                       color: const Color(0xFFF2EFF5),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-
                     child: const Text(
                       'PRÓXIMAMENTE',
                       style: TextStyle(
-                        fontSize: 8,
+                        fontSize: 7,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey,
                       ),
                     ),
                   ),
+                ],
               ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 // ============================================================
@@ -879,7 +818,20 @@ class ItemPresupuesto {
 // ============================================================
 
 class NuevoPresupuesto extends StatefulWidget {
-  const NuevoPresupuesto({super.key});
+  final int? presupuestoId;
+  final int? numeroEdicion;
+  final String? fechaEdicion;
+  final String? horaEdicion;
+
+  const NuevoPresupuesto({
+    super.key,
+    this.presupuestoId,
+    this.numeroEdicion,
+    this.fechaEdicion,
+    this.horaEdicion,
+  });
+
+  bool get editando => presupuestoId != null;
 
   @override
   State<NuevoPresupuesto> createState() => _NuevoPresupuestoState();
@@ -896,13 +848,101 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
 
   final List<ItemPresupuesto> items = [ItemPresupuesto()];
 
+  // ==========================================================
+  // OPCIONES DEL PRESUPUESTO
+  // ==========================================================
+
+  final observacionesAdicionalesController = TextEditingController();
+
+  final descuentoController = TextEditingController();
+
+  String descuentoTipo = 'NINGUNO';
+
+  bool aplicarIva = true;
+
   bool cargandoPrecios = true;
+  bool cargandoEdicion = false;
+
+  bool get editando => widget.editando;
 
   @override
   void initState() {
     super.initState();
     cargarClientes();
     cargarPrecios();
+    if (editando) {
+      cargarPresupuestoParaEditar();
+    }
+  }
+
+  Future<void> cargarPresupuestoParaEditar() async {
+    if (widget.presupuestoId == null) return;
+
+    setState(() => cargandoEdicion = true);
+
+    try {
+      final presupuesto = await EferDatabase.instance.obtenerPresupuestoPorId(
+        widget.presupuestoId!,
+      );
+      final productos = await EferDatabase.instance.obtenerProductos(
+        widget.presupuestoId!,
+      );
+
+      if (presupuesto == null) {
+        throw Exception('No se encontró el presupuesto.');
+      }
+
+      nombreController.text = (presupuesto['nombreCliente'] ?? '').toString();
+      telefonoController.text = (presupuesto['telefono'] ?? '').toString();
+      correoController.text = (presupuesto['correo'] ?? '').toString();
+      direccionController.text = (presupuesto['direccion'] ?? '').toString();
+      colorSeleccionado = (presupuesto['color'] ?? 'MATE').toString();
+      clienteSeleccionadoId = (presupuesto['clienteId'] as num?)?.toInt();
+      observacionesAdicionalesController.text =
+          (presupuesto['observacionesAdicionales'] ?? '').toString();
+      descuentoTipo = (presupuesto['descuentoTipo'] ?? 'NINGUNO').toString();
+      final descuento = (presupuesto['descuento'] as num?)?.toDouble() ?? 0;
+      if (descuentoTipo == 'PORCENTAJE') {
+        descuentoController.text = descuento
+            .toStringAsFixed(2)
+            .replaceAll('.00', '');
+      } else if (descuentoTipo == 'MONTO') {
+        descuentoController.text = descuento.toStringAsFixed(0);
+      } else {
+        descuentoController.clear();
+      }
+      aplicarIva = ((presupuesto['iva'] as num?)?.toDouble() ?? 0) > 0;
+
+      for (final item in items) {
+        item.dispose();
+      }
+      items.clear();
+
+      if (productos.isEmpty) {
+        items.add(ItemPresupuesto());
+      } else {
+        for (final producto in productos) {
+          final item = ItemPresupuesto();
+          item.producto = producto['producto']?.toString();
+          item.ancho.text = ((producto['ancho'] as num?)?.toDouble() ?? 0)
+              .toStringAsFixed(0);
+          item.ancho2.text = ((producto['ancho2'] as num?)?.toDouble() ?? 0)
+              .toStringAsFixed(0);
+          item.alto.text = ((producto['alto'] as num?)?.toDouble() ?? 0)
+              .toStringAsFixed(0);
+          item.cantidad.text = ((producto['cantidad'] as num?)?.toDouble() ?? 1)
+              .toStringAsFixed(0);
+          items.add(item);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se pudo cargar el presupuesto: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => cargandoEdicion = false);
+    }
   }
 
   Future<void> cargarPrecios() async {
@@ -960,6 +1000,37 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
     return items.fold(0, (total, item) => total + item.total);
   }
 
+  double get descuentoMonto {
+    if (descuentoTipo == 'NINGUNO') {
+      return 0;
+    }
+
+    final valor =
+        double.tryParse(descuentoController.text.replaceAll(',', '.')) ?? 0;
+
+    if (valor <= 0) {
+      return 0;
+    }
+
+    if (descuentoTipo == 'PORCENTAJE') {
+      return totalGeneral * (valor / 100);
+    }
+
+    return valor.clamp(0, totalGeneral).toDouble();
+  }
+
+  double get neto {
+    return (totalGeneral - descuentoMonto).clamp(0, double.infinity).toDouble();
+  }
+
+  double get ivaCalculado {
+    return aplicarIva ? neto * 0.19 : 0;
+  }
+
+  double get totalConAjustes {
+    return neto + ivaCalculado;
+  }
+
   double get metrosTotales {
     return items.fold(0, (total, item) => total + item.metrosCuadrados);
   }
@@ -999,6 +1070,8 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
     telefonoController.dispose();
     correoController.dispose();
     direccionController.dispose();
+    observacionesAdicionalesController.dispose();
+    descuentoController.dispose();
 
     for (final item in items) {
       item.dispose();
@@ -1043,36 +1116,32 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
     // OBTENER NUMERO
     // --------------------------------------------------------
 
-    final numero = await EferDatabase.instance.obtenerSiguienteNumero();
+    final numero = editando
+        ? widget.numeroEdicion!
+        : await EferDatabase.instance.obtenerSiguienteNumero();
 
-    if (!mounted) {
-      return;
-    }
-
-    // --------------------------------------------------------
-    // FECHA Y HORA ACTUAL
-    // --------------------------------------------------------
+    if (!mounted) return;
 
     final ahora = DateTime.now();
-
-    final fecha =
-        '${ahora.day.toString().padLeft(2, '0')}/'
-        '${ahora.month.toString().padLeft(2, '0')}/'
-        '${ahora.year}';
-
-    final hora =
-        '${ahora.hour.toString().padLeft(2, '0')}:'
-        '${ahora.minute.toString().padLeft(2, '0')}';
+    final fecha = editando
+        ? widget.fechaEdicion!
+        : '${ahora.day.toString().padLeft(2, '0')}/'
+              '${ahora.month.toString().padLeft(2, '0')}/'
+              '${ahora.year}';
+    final hora = editando
+        ? widget.horaEdicion!
+        : '${ahora.hour.toString().padLeft(2, '0')}:'
+              '${ahora.minute.toString().padLeft(2, '0')}';
 
     // --------------------------------------------------------
     // CALCULOS
     // --------------------------------------------------------
 
     final subtotal = totalGeneral;
-
-    final iva = subtotal * 0.19;
-
-    final total = subtotal + iva;
+    final descuento = descuentoMonto;
+    final subtotalConDescuento = neto;
+    final iva = ivaCalculado;
+    final total = totalConAjustes;
 
     // --------------------------------------------------------
     // PRODUCTOS
@@ -1138,21 +1207,52 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
           : direccionController.text.trim(),
     );
 
-    await EferDatabase.instance.guardarPresupuestoCompleto(
-      numero: numero,
-      fecha: fecha,
-      hora: hora,
-      nombreCliente: nombreController.text.trim(),
-      clienteId: clienteId,
-      telefono: telefonoController.text.trim(),
-      correo: correoController.text.trim(),
-      direccion: direccionController.text.trim(),
-      color: colorSeleccionado,
-      subtotal: subtotal,
-      iva: iva,
-      total: total,
-      productos: productos,
-    );
+    if (editando) {
+      await EferDatabase.instance.actualizarPresupuestoCompleto(
+        presupuestoId: widget.presupuestoId!,
+        numero: numero,
+        fecha: fecha,
+        hora: hora,
+        nombreCliente: nombreController.text.trim(),
+        clienteId: clienteId,
+        telefono: telefonoController.text.trim(),
+        correo: correoController.text.trim(),
+        direccion: direccionController.text.trim(),
+        color: colorSeleccionado,
+        subtotal: subtotal,
+        descuento: descuento,
+        descuentoTipo: descuentoTipo,
+        neto: subtotalConDescuento,
+        aplicarIva: aplicarIva,
+        iva: iva,
+        total: total,
+        observacionesAdicionales: observacionesAdicionalesController.text
+            .trim(),
+        productos: productos,
+      );
+    } else {
+      await EferDatabase.instance.guardarPresupuestoCompleto(
+        numero: numero,
+        fecha: fecha,
+        hora: hora,
+        nombreCliente: nombreController.text.trim(),
+        clienteId: clienteId,
+        telefono: telefonoController.text.trim(),
+        correo: correoController.text.trim(),
+        direccion: direccionController.text.trim(),
+        color: colorSeleccionado,
+        subtotal: subtotal,
+        descuento: descuento,
+        descuentoTipo: descuentoTipo,
+        neto: subtotalConDescuento,
+        aplicarIva: aplicarIva,
+        iva: iva,
+        total: total,
+        observacionesAdicionales: observacionesAdicionalesController.text
+            .trim(),
+        productos: productos,
+      );
+    }
 
     if (!mounted) {
       return;
@@ -1166,7 +1266,9 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Presupuesto guardado'),
+          title: Text(
+            editando ? 'Presupuesto actualizado' : 'Presupuesto guardado',
+          ),
 
           content: Text(
             'Presupuesto Nº $numero\n\n'
@@ -1174,8 +1276,10 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
             'Hora: $hora\n\n'
             'Subtotal: '
             '${dinero(subtotal)}\n'
-            'IVA 19%: '
-            '${dinero(iva)}\n'
+            '${descuento > 0 ? 'Descuento: ${dinero(descuento)}\n' : ''}'
+            'Neto: '
+            '${dinero(subtotalConDescuento)}\n'
+            '${aplicarIva ? 'IVA 19%: ${dinero(iva)}\n' : 'IVA: No aplicado\n'}'
             'TOTAL: '
             '${dinero(total)}',
           ),
@@ -1205,8 +1309,14 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
           correo: correoController.text.trim(),
           direccion: direccionController.text.trim(),
           subtotal: subtotal,
+          descuento: descuento,
+          descuentoTipo: descuentoTipo,
+          neto: subtotalConDescuento,
+          aplicarIva: aplicarIva,
           iva: iva,
           total: total,
+          observacionesAdicionales: observacionesAdicionalesController.text
+              .trim(),
           productos: productos.map((producto) {
             return ProductoImagen(
               producto: producto['producto'] as String,
@@ -1233,374 +1343,594 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Nuevo presupuesto',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          editando ? 'Editar presupuesto' : 'Nuevo presupuesto',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: const Color(0xFF123B5D),
         foregroundColor: Colors.white,
       ),
 
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-
-          children: [
-            // ==================================================
-            // DATOS CLIENTE
-            // ==================================================
-
-            const Text(
-              'DATOS DEL CLIENTE',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF123B5D),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            DropdownButtonFormField<int>(
-              initialValue: clienteSeleccionadoId,
-
-              decoration: InputDecoration(
-                labelText: 'Cliente registrado',
-                hintText: 'Seleccionar cliente',
-                prefixIcon: const Icon(Icons.people_alt_outlined),
-
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-
-              items: [
-                const DropdownMenuItem<int>(
-                  value: null,
-                  child: Text('Sin cliente registrado'),
-                ),
-
-                ...clientes.map((cliente) {
-                  return DropdownMenuItem<int>(
-                    value: cliente['id'] as int,
-                    child: Text(cliente['nombre'] as String),
-                  );
-                }),
-              ],
-
-              onChanged: (clienteId) {
-                setState(() {
-                  clienteSeleccionadoId = clienteId;
-                });
-
-                if (clienteId == null) {
-                  return;
-                }
-
-                final cliente = clientes.firstWhere(
-                  (elemento) => elemento['id'] == clienteId,
-                );
-
-                nombreController.text = (cliente['nombre'] ?? '').toString();
-
-                telefonoController.text = (cliente['telefono'] ?? '')
-                    .toString();
-
-                correoController.text = (cliente['correo'] ?? '').toString();
-
-                direccionController.text = (cliente['direccion'] ?? '')
-                    .toString();
-              },
-            ),
-
-            const SizedBox(height: 15),
-
-            campo(
-              'Nombre',
-              'Nombre del cliente',
-              nombreController,
-              Icons.person,
-            ),
-
-            campo(
-              'Teléfono',
-              '+56 9 1234 5678',
-              telefonoController,
-              Icons.phone,
-              tipo: TextInputType.phone,
-            ),
-
-            campo(
-              'Correo',
-              'correo@ejemplo.cl',
-              correoController,
-              Icons.email,
-              tipo: TextInputType.emailAddress,
-            ),
-
-            campo(
-              'Dirección',
-              'Dirección del proyecto',
-              direccionController,
-              Icons.location_on,
-            ),
-
-            const SizedBox(height: 12),
-
-            // ==========================================================
-            // COLOR DE LAS VENTANAS
-            // ==========================================================
-            DropdownButtonFormField<String>(
-              initialValue: colorSeleccionado,
-
-              decoration: InputDecoration(
-                labelText: 'Color de las ventanas',
-                prefixIcon: const Icon(Icons.palette_outlined),
-
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-
-              items: const [
-                DropdownMenuItem(value: 'MATE', child: Text('MATE')),
-
-                DropdownMenuItem(value: 'MADERA', child: Text('MADERA')),
-
-                DropdownMenuItem(value: 'NEGRO', child: Text('NEGRO')),
-
-                DropdownMenuItem(value: 'BLANCO', child: Text('BLANCO')),
-
-                DropdownMenuItem(value: 'TITANIO', child: Text('TITANIO')),
-
-                DropdownMenuItem(value: 'GRAFITO', child: Text('GRAFITO')),
-              ],
-
-              onChanged: (valor) {
-                if (valor == null) return;
-
-                setState(() {
-                  colorSeleccionado = valor;
-                });
-              },
-            ),
-
-            const SizedBox(height: 25),
-
-            const SizedBox(height: 25),
-
-            // ==================================================
-            // PRODUCTOS
-            // ==================================================
-            const Text(
-              'PRODUCTOS',
-              style: TextStyle(
-                fontSize: 19,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF123B5D),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            ...List.generate(items.length, (index) => construirProducto(index)),
-
-            const SizedBox(height: 10),
-
-            // ==================================================
-            // AGREGAR PRODUCTO
-            // ==================================================
-            SizedBox(
-              width: double.infinity,
-              height: 55,
-
-              child: OutlinedButton.icon(
-                onPressed: agregarProducto,
-
-                icon: const Icon(Icons.add),
-
-                label: const Text(
-                  'AGREGAR PRODUCTO',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFF123B5D),
-
-                  side: const BorderSide(color: Color(0xFF123B5D), width: 2),
-
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            // ==================================================
-            // RESUMEN
-            // ==================================================
-            Container(
-              width: double.infinity,
-
+      body: cargandoEdicion
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
 
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF2F8),
-
-                borderRadius: BorderRadius.circular(20),
-              ),
-
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
+                  // ==================================================
+                  // DATOS CLIENTE
+                  // ==================================================
+
                   const Text(
-                    'RESUMEN DEL PRESUPUESTO',
+                    'DATOS DEL CLIENTE',
                     style: TextStyle(
-                      fontSize: 17,
+                      fontSize: 19,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF123B5D),
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 15),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  DropdownButtonFormField<int>(
+                    initialValue: clienteSeleccionadoId,
 
-                    children: [
-                      const Text('Productos'),
+                    decoration: InputDecoration(
+                      labelText: 'Cliente registrado',
+                      hintText: 'Seleccionar cliente',
+                      prefixIcon: const Icon(Icons.people_alt_outlined),
 
-                      Text(
-                        '${items.length}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
                       ),
+                    ),
+
+                    items: [
+                      const DropdownMenuItem<int>(
+                        value: null,
+                        child: Text('Sin cliente registrado'),
+                      ),
+
+                      ...clientes.map((cliente) {
+                        return DropdownMenuItem<int>(
+                          value: cliente['id'] as int,
+                          child: Text(cliente['nombre'] as String),
+                        );
+                      }),
                     ],
+
+                    onChanged: (clienteId) {
+                      setState(() {
+                        clienteSeleccionadoId = clienteId;
+                      });
+
+                      if (clienteId == null) {
+                        return;
+                      }
+
+                      final cliente = clientes.firstWhere(
+                        (elemento) => elemento['id'] == clienteId,
+                      );
+
+                      nombreController.text = (cliente['nombre'] ?? '')
+                          .toString();
+
+                      telefonoController.text = (cliente['telefono'] ?? '')
+                          .toString();
+
+                      correoController.text = (cliente['correo'] ?? '')
+                          .toString();
+
+                      direccionController.text = (cliente['direccion'] ?? '')
+                          .toString();
+                    },
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 15),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                    children: [
-                      const Text('Superficie total'),
-
-                      Text(
-                        '${metrosTotales.toStringAsFixed(2)} m²',
-
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  campo(
+                    'Nombre',
+                    'Nombre del cliente',
+                    nombreController,
+                    Icons.person,
                   ),
 
-                  const Divider(height: 25),
+                  campo(
+                    'Teléfono',
+                    '+56 9 1234 5678',
+                    telefonoController,
+                    Icons.phone,
+                    tipo: TextInputType.phone,
+                  ),
 
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  campo(
+                    'Correo',
+                    'correo@ejemplo.cl',
+                    correoController,
+                    Icons.email,
+                    tipo: TextInputType.emailAddress,
+                  ),
 
-                    children: [
-                      const Text(
-                        'SUBTOTAL',
+                  campo(
+                    'Dirección',
+                    'Dirección del proyecto',
+                    direccionController,
+                    Icons.location_on,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // ==========================================================
+                  // COLOR DE LAS VENTANAS
+                  // ==========================================================
+                  DropdownButtonFormField<String>(
+                    initialValue: colorSeleccionado,
+
+                    decoration: InputDecoration(
+                      labelText: 'Color de las ventanas',
+                      prefixIcon: const Icon(Icons.palette_outlined),
+
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+
+                    items: const [
+                      DropdownMenuItem(value: 'MATE', child: Text('MATE')),
+
+                      DropdownMenuItem(value: 'MADERA', child: Text('MADERA')),
+
+                      DropdownMenuItem(value: 'NEGRO', child: Text('NEGRO')),
+
+                      DropdownMenuItem(value: 'BLANCO', child: Text('BLANCO')),
+
+                      DropdownMenuItem(
+                        value: 'TITANIO',
+                        child: Text('TITANIO'),
+                      ),
+
+                      DropdownMenuItem(
+                        value: 'GRAFITO',
+                        child: Text('GRAFITO'),
+                      ),
+                    ],
+
+                    onChanged: (valor) {
+                      if (valor == null) return;
+
+                      setState(() {
+                        colorSeleccionado = valor;
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  const SizedBox(height: 25),
+
+                  // ==================================================
+                  // PRODUCTOS
+                  // ==================================================
+                  const Text(
+                    'PRODUCTOS',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF123B5D),
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  ...List.generate(
+                    items.length,
+                    (index) => construirProducto(index),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // ==================================================
+                  // AGREGAR PRODUCTO
+                  // ==================================================
+                  SizedBox(
+                    width: double.infinity,
+                    height: 55,
+
+                    child: OutlinedButton.icon(
+                      onPressed: agregarProducto,
+
+                      icon: const Icon(Icons.add),
+
+                      label: const Text(
+                        'AGREGAR PRODUCTO',
                         style: TextStyle(
-                          fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          fontSize: 16,
                         ),
                       ),
 
-                      Text(
-                        dinero(totalGeneral),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF123B5D),
 
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                    children: [
-                      const Text('IVA 19%'),
-
-                      Text(
-                        dinero(totalGeneral * 0.19),
-
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-
-                  const Divider(height: 25),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                    children: [
-                      const Text(
-                        'TOTAL',
-                        style: TextStyle(
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      Text(
-                        dinero(totalGeneral + (totalGeneral * 0.19)),
-
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.bold,
+                        side: const BorderSide(
                           color: Color(0xFF123B5D),
+                          width: 2,
+                        ),
+
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                    ],
+                    ),
                   ),
+
+                  const SizedBox(height: 25),
+
+                  // ==================================================
+                  // OBSERVACIONES ADICIONALES
+                  // ==================================================
+                  const Text(
+                    'OBSERVACIONES ADICIONALES',
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF123B5D),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  TextField(
+                    controller: observacionesAdicionalesController,
+                    maxLines: 4,
+                    textCapitalization: TextCapitalization.sentences,
+                    decoration: InputDecoration(
+                      hintText:
+                          'Ejemplo: Las medidas las dio el cliente.\n'
+                          'Medidas según plano.\n'
+                          'Rasgos falta pintar.\n'
+                          'Trabajo no incluye sacar ventanas existentes.',
+                      prefixIcon: const Padding(
+                        padding: EdgeInsets.only(bottom: 55),
+                        child: Icon(Icons.notes_outlined),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // ==================================================
+                  // DESCUENTO E IVA
+                  // ==================================================
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F8FA),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFFD4DDE4)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'AJUSTES DEL PRESUPUESTO',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF123B5D),
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                initialValue: descuentoTipo,
+                                decoration: InputDecoration(
+                                  labelText: 'Descuento',
+                                  prefixIcon: const Icon(Icons.percent),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                ),
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'NINGUNO',
+                                    child: Text('Sin descuento'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'PORCENTAJE',
+                                    child: Text('Porcentaje (%)'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'MONTO',
+                                    child: Text('Monto (\$)'),
+                                  ),
+                                ],
+                                onChanged: (valor) {
+                                  if (valor == null) return;
+                                  setState(() {
+                                    descuentoTipo = valor;
+                                    if (valor == 'NINGUNO') {
+                                      descuentoController.clear();
+                                    }
+                                  });
+                                },
+                              ),
+                            ),
+
+                            if (descuentoTipo != 'NINGUNO') ...[
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: TextField(
+                                  controller: descuentoController,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  onChanged: (_) => setState(() {}),
+                                  decoration: InputDecoration(
+                                    labelText: descuentoTipo == 'PORCENTAJE'
+                                        ? 'Descuento %'
+                                        : 'Descuento \$',
+                                    hintText: descuentoTipo == 'PORCENTAJE'
+                                        ? '10'
+                                        : '50000',
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text(
+                            'Aplicar IVA 19%',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Text(
+                            aplicarIva
+                                ? 'El IVA se calculará sobre el neto.'
+                                : 'El presupuesto se generará sin IVA.',
+                          ),
+                          value: aplicarIva,
+                          onChanged: (valor) {
+                            setState(() {
+                              aplicarIva = valor;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // ==================================================
+                  // RESUMEN
+                  // ==================================================
+                  Container(
+                    width: double.infinity,
+
+                    padding: const EdgeInsets.all(20),
+
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEAF2F8),
+
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+
+                    child: Column(
+                      children: [
+                        const Text(
+                          'RESUMEN DEL PRESUPUESTO',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF123B5D),
+                          ),
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                          children: [
+                            const Text('Productos'),
+
+                            Text(
+                              '${items.length}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                          children: [
+                            const Text('Superficie total'),
+
+                            Text(
+                              '${metrosTotales.toStringAsFixed(2)} m²',
+
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const Divider(height: 25),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                          children: [
+                            const Text(
+                              'SUBTOTAL',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            Text(
+                              dinero(totalGeneral),
+
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        if (descuentoMonto > 0) ...[
+                          const SizedBox(height: 8),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                descuentoTipo == 'PORCENTAJE'
+                                    ? 'DESCUENTO (${double.tryParse(descuentoController.text.replaceAll(',', '.'))?.toStringAsFixed(0) ?? '0'}%)'
+                                    : 'DESCUENTO',
+                              ),
+                              Text(
+                                '- ${dinero(descuentoMonto)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 8),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                'NETO',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                dinero(neto),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+
+                        const SizedBox(height: 8),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                          children: [
+                            Text(aplicarIva ? 'IVA 19%' : 'IVA'),
+
+                            Text(
+                              dinero(ivaCalculado),
+
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const Divider(height: 25),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                          children: [
+                            const Text(
+                              'TOTAL',
+                              style: TextStyle(
+                                fontSize: 21,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+
+                            Text(
+                              dinero(totalConAjustes),
+
+                              style: const TextStyle(
+                                fontSize: 23,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF123B5D),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 25),
+
+                  // ==================================================
+                  // GENERAR PRESUPUESTO
+                  // ==================================================
+                  SizedBox(
+                    width: double.infinity,
+                    height: 60,
+
+                    child: ElevatedButton.icon(
+                      onPressed: _guardarPresupuesto,
+
+                      icon: const Icon(Icons.receipt_long),
+
+                      label: Text(
+                        editando ? 'GUARDAR CAMBIOS' : 'GENERAR PRESUPUESTO',
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF123B5D),
+
+                        foregroundColor: Colors.white,
+
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
                 ],
               ),
             ),
-
-            const SizedBox(height: 25),
-
-            // ==================================================
-            // GENERAR PRESUPUESTO
-            // ==================================================
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-
-              child: ElevatedButton.icon(
-                onPressed: _guardarPresupuesto,
-
-                icon: const Icon(Icons.receipt_long),
-
-                label: const Text(
-                  'GENERAR PRESUPUESTO',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
-                ),
-
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF123B5D),
-
-                  foregroundColor: Colors.white,
-
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-          ],
-        ),
-      ),
     );
   }
 

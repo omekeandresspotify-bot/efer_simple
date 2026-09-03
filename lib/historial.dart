@@ -12,6 +12,7 @@ import 'database.dart';
 
 import 'presupuesto_imagen.dart';
 import 'pauta_fabricacion.dart';
+import 'main.dart';
 
 class HistorialPage extends StatefulWidget {
   const HistorialPage({super.key});
@@ -298,6 +299,28 @@ class _HistorialPageState extends State<HistorialPage> {
 
               const SizedBox(height: 14),
 
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => editarPresupuesto(presupuesto),
+                  icon: const Icon(Icons.edit_outlined),
+                  label: const Text(
+                    'EDITAR PRESUPUESTO',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF123B5D),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
@@ -492,6 +515,27 @@ class _HistorialPageState extends State<HistorialPage> {
   }
 
   // ==========================================================
+  // EDITAR PRESUPUESTO
+  // ==========================================================
+
+  Future<void> editarPresupuesto(Map<String, dynamic> presupuesto) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NuevoPresupuesto(
+          presupuestoId: (presupuesto['id'] as num).toInt(),
+          numeroEdicion: (presupuesto['numero'] as num).toInt(),
+          fechaEdicion: (presupuesto['fecha'] ?? '').toString(),
+          horaEdicion: (presupuesto['hora'] ?? '').toString(),
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    await cargarHistorial();
+  }
+
+  // ==========================================================
   // MARCAR ACEPTADO
   // ==========================================================
 
@@ -624,11 +668,25 @@ class _HistorialPageState extends State<HistorialPage> {
 
             direccion: (presupuesto['direccion'] as String?) ?? '',
 
+            color: (presupuesto['color'] as String?) ?? 'MATE',
+
             subtotal: (presupuesto['subtotal'] as num).toDouble(),
+
+            descuento: (presupuesto['descuento'] as num?)?.toDouble() ?? 0,
+
+            descuentoTipo:
+                (presupuesto['descuentoTipo'] as String?) ?? 'NINGUNO',
+
+            neto: (presupuesto['subtotal'] as num).toDouble(),
+
+            aplicarIva: ((presupuesto['iva'] as num?)?.toDouble() ?? 0) > 0,
 
             iva: (presupuesto['iva'] as num).toDouble(),
 
             total: (presupuesto['total'] as num).toDouble(),
+
+            observacionesAdicionales:
+                (presupuesto['observacionesAdicionales'] as String?) ?? '',
 
             productos: lista,
           ),

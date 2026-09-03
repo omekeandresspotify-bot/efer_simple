@@ -33,7 +33,7 @@ class EferDatabase {
       return await databaseFactoryFfiWeb.openDatabase(
         'efer.db',
         options: OpenDatabaseOptions(
-          version: 8,
+          version: 9,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
         ),
@@ -46,7 +46,7 @@ class EferDatabase {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -137,6 +137,7 @@ class EferDatabase {
         subtotal REAL NOT NULL,
         iva REAL NOT NULL,
         total REAL NOT NULL,
+        observacionesAdicionales TEXT NOT NULL DEFAULT '',
 
         aceptado INTEGER NOT NULL DEFAULT 0,
         estado TEXT NOT NULL DEFAULT 'PENDIENTE',
@@ -687,6 +688,18 @@ class EferDatabase {
           }, conflictAlgorithm: ConflictAlgorithm.ignore);
         }
       }
+    }
+
+    // --------------------------------------------------------
+    // VERSION 8 → 9
+    // OBSERVACIONES ADICIONALES
+    // --------------------------------------------------------
+
+    if (oldVersion < 9) {
+      await db.execute('''
+        ALTER TABLE presupuestos
+        ADD COLUMN observacionesAdicionales TEXT NOT NULL DEFAULT ''
+      ''');
     }
   }
 
@@ -1385,8 +1398,13 @@ class EferDatabase {
     String? direccion,
     required String color,
     required double subtotal,
+    required double descuento,
+    required String descuentoTipo,
+    required double neto,
+    required bool aplicarIva,
     required double iva,
     required double total,
+    required String observacionesAdicionales,
     required List<Map<String, dynamic>> productos,
   }) async {
     final db = await database;
@@ -1406,12 +1424,13 @@ class EferDatabase {
         'color': color,
 
         'subtotalOriginal': subtotal,
-        'descuento': 0,
-        'descuentoTipo': 'NINGUNO',
+        'descuento': descuento,
+        'descuentoTipo': descuentoTipo,
 
-        'subtotal': subtotal,
-        'iva': iva,
+        'subtotal': neto,
+        'iva': aplicarIva ? iva : 0,
         'total': total,
+        'observacionesAdicionales': observacionesAdicionales,
 
         'aceptado': 0,
         'estado': 'PENDIENTE',
@@ -1487,6 +1506,94 @@ class EferDatabase {
     }
 
     return (presupuesto['aceptado'] ?? 0) == 1;
+  }
+
+  // ==========================================================
+  // OBTENER UN PRESUPUESTO POR ID
+  // ==========================================================
+
+  Future<Map<String, dynamic>?> obtenerPresupuestoPorId(int id) async {
+    final db = await database;
+    final resultado = await db.query(
+      'presupuestos',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    return resultado.isEmpty ? null : resultado.first;
+  }
+
+  // ==========================================================
+  // ACTUALIZAR PRESUPUESTO COMPLETO
+  // ==========================================================
+
+  Future<void> actualizarPresupuestoCompleto({
+    required int presupuestoId,
+    required int numero,
+    required String fecha,
+    required String hora,
+    required String nombreCliente,
+    int? clienteId,
+    String? telefono,
+    String? correo,
+    String? direccion,
+    required String color,
+    required double subtotal,
+    required double descuento,
+    required String descuentoTipo,
+    required double neto,
+    required bool aplicarIva,
+    required double iva,
+    required double total,
+    required String observacionesAdicionales,
+    required List<Map<String, dynamic>> productos,
+  }) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      await txn.update(
+        'presupuestos',
+        {
+          'clienteId': clienteId,
+          'numero': numero,
+          'fecha': fecha,
+          'hora': hora,
+          'nombreCliente': nombreCliente,
+          'telefono': telefono,
+          'correo': correo,
+          'direccion': direccion,
+          'color': color,
+          'subtotalOriginal': subtotal,
+          'descuento': descuento,
+          'descuentoTipo': descuentoTipo,
+          'subtotal': neto,
+          'iva': aplicarIva ? iva : 0,
+          'total': total,
+          'observacionesAdicionales': observacionesAdicionales,
+        },
+        where: 'id = ?',
+        whereArgs: [presupuestoId],
+      );
+
+      await txn.delete(
+        'productos_presupuesto',
+        where: 'presupuestoId = ?',
+        whereArgs: [presupuestoId],
+      );
+
+      for (final producto in productos) {
+        await txn.insert('productos_presupuesto', {
+          'presupuestoId': presupuestoId,
+          'producto': producto['producto'],
+          'ancho': producto['ancho'],
+          'ancho2': producto['ancho2'],
+          'alto': producto['alto'],
+          'cantidad': producto['cantidad'],
+          'metrosCuadrados': producto['metrosCuadrados'],
+          'precioM2': producto['precioM2'],
+          'total': producto['total'],
+        });
+      }
+    });
   }
 
   // ==========================================================

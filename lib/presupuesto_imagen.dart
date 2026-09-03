@@ -47,8 +47,13 @@ class PresupuestoImagen extends StatefulWidget {
   final String color;
 
   final double subtotal;
+  final double descuento;
+  final String descuentoTipo;
+  final double neto;
+  final bool aplicarIva;
   final double iva;
   final double total;
+  final String observacionesAdicionales;
 
   final List<ProductoImagen> productos;
 
@@ -63,8 +68,13 @@ class PresupuestoImagen extends StatefulWidget {
     required this.direccion,
     this.color = 'MATE',
     required this.subtotal,
+    this.descuento = 0,
+    this.descuentoTipo = 'NINGUNO',
+    this.neto = 0,
+    this.aplicarIva = true,
     required this.iva,
     required this.total,
+    this.observacionesAdicionales = '',
     required this.productos,
   });
 
@@ -77,15 +87,29 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
 
   bool generando = false;
 
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        generarImagen();
+      }
+    });
+  }
+
   // ==========================================================
   // FORMATO DINERO
   // ==========================================================
 
   String dinero(double valor) {
-    return '\$${valor.toStringAsFixed(0)}'.replaceAllMapped(
+    final absoluto = valor.abs();
+    final texto = '\$${absoluto.toStringAsFixed(0)}'.replaceAllMapped(
       RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
       (match) => '${match.group(1)}.',
     );
+
+    return valor < 0 ? '-$texto' : texto;
   }
 
   // ==========================================================
@@ -320,11 +344,16 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: generando ? null : generarImagen,
+                      onPressed: generando
+                          ? null
+                          : () {
+                              Navigator.of(context)
+                                  .popUntil((route) => route.isFirst);
+                            },
 
-                      icon: const Icon(Icons.image),
+                      icon: const Icon(Icons.home),
 
-                      label: const Text('GENERAR IMAGEN'),
+                      label: const Text('INICIO'),
 
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF123B5D),
@@ -1172,6 +1201,35 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
             'los valores indicados.',
             style: TextStyle(fontSize: 12),
           ),
+
+          if (widget.observacionesAdicionales.trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+
+            const Text(
+              'OBSERVACIONES ADICIONALES',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF123B5D),
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            ...widget.observacionesAdicionales
+                .trim()
+                .split(RegExp(r'\r?\n'))
+                .where((linea) => linea.trim().isNotEmpty)
+                .map(
+                  (linea) => Padding(
+                    padding: const EdgeInsets.only(bottom: 5),
+                    child: Text(
+                      '• ${linea.trim()}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ),
+          ],
         ],
       ),
     );
@@ -1198,9 +1256,19 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
               children: [
                 _lineaTotal('SUBTOTAL', widget.subtotal),
 
+                if (widget.descuento > 0) ...[
+                  const SizedBox(height: 9),
+                  _lineaTotal('DESCUENTO', -widget.descuento),
+                  const SizedBox(height: 9),
+                  _lineaTotal('NETO', widget.neto),
+                ],
+
                 const SizedBox(height: 9),
 
-                _lineaTotal('IVA 19%', widget.iva),
+                _lineaTotal(
+                  widget.aplicarIva ? 'IVA 19%' : 'IVA NO APLICADO',
+                  widget.iva,
+                ),
               ],
             ),
           ),
