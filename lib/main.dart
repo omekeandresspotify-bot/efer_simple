@@ -1369,16 +1369,37 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
           observacionesAdicionales: observacionesAdicionalesController.text
               .trim(),
           productos: productos.map((producto) {
+            final medidasData = (producto['medidas'] as List?) ?? [];
+
+            final medidas = medidasData.map((medida) {
+              return MedidaImagen(
+                ancho: (medida['ancho'] as num?)?.toDouble() ?? 0,
+                ancho2: (medida['ancho2'] as num?)?.toDouble() ?? 0,
+                alto: (medida['alto'] as num?)?.toDouble() ?? 0,
+                cantidad: (medida['cantidad'] as num?)?.toDouble() ?? 1,
+                metrosCuadrados:
+                    (medida['metrosCuadrados'] as num?)?.toDouble() ?? 0,
+              );
+            }).toList();
+
             return ProductoImagen(
               producto: producto['producto'] as String,
-              ancho: (producto['ancho'] as num).toDouble(),
-              ancho2: (producto['ancho2'] as num).toDouble(),
-              alto: (producto['alto'] as num).toDouble(),
 
-              cantidad: (producto['cantidad'] as num).toDouble(),
-              metrosCuadrados: (producto['metrosCuadrados'] as num).toDouble(),
-              precioM2: (producto['precioM2'] as num).toDouble(),
-              total: (producto['total'] as num).toDouble(),
+              // Compatibilidad con la primera medida
+              ancho: medidas.isNotEmpty ? medidas[0].ancho : 0,
+              ancho2: medidas.isNotEmpty ? medidas[0].ancho2 : 0,
+              alto: medidas.isNotEmpty ? medidas[0].alto : 0,
+              cantidad: medidas.isNotEmpty ? medidas[0].cantidad : 1,
+
+              // TOTAL de las 5 medidas
+              metrosCuadrados:
+                  (producto['metrosCuadrados'] as num?)?.toDouble() ?? 0,
+
+              precioM2: (producto['precioM2'] as num?)?.toDouble() ?? 0,
+
+              total: (producto['total'] as num?)?.toDouble() ?? 0,
+
+              medidas: medidas,
             );
           }).toList(),
         ),
@@ -2168,119 +2189,157 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 5),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 5),
-                          child: campoMedida(medida.ancho, '1200'),
-                        ),
-                      ),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final anchoDisponible = constraints.maxWidth;
 
-                      if (esShowerDoorDosAnchos)
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 5),
-                            child: campoMedida(medida.ancho2, '1200'),
+                      // Ancho reservado para el botón eliminar
+                      const anchoEliminar = 28.0;
+
+                      // Espacios entre columnas
+                      const espacio = 5.0;
+
+                      final columnas = esShowerDoorDosAnchos ? 6 : 5;
+
+                      final anchoColumna =
+                          (anchoDisponible -
+                              anchoEliminar -
+                              (espacio * (columnas - 1))) /
+                          columnas;
+
+                      return Row(
+                        children: [
+                          // ------------------------------------------
+                          // ANCHO
+                          // ------------------------------------------
+                          SizedBox(
+                            width: anchoColumna,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: campoMedida(medida.ancho, '1200'),
+                            ),
                           ),
-                        ),
 
-                      Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 5),
-                          child: campoMedida(medida.alto, '2000'),
-                        ),
-                      ),
+                          // ------------------------------------------
+                          // ANCHO 2
+                          // ------------------------------------------
+                          if (esShowerDoorDosAnchos)
+                            SizedBox(
+                              width: anchoColumna,
+                              child: Padding(
+                                padding: const EdgeInsets.only(right: 5),
+                                child: campoMedida(medida.ancho2, '1200'),
+                              ),
+                            ),
 
-                      Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 5),
-                          child: SizedBox(
+                          // ------------------------------------------
+                          // ALTO
+                          // ------------------------------------------
+                          SizedBox(
+                            width: anchoColumna,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: campoMedida(medida.alto, '2000'),
+                            ),
+                          ),
+
+                          // ------------------------------------------
+                          // CANTIDAD
+                          // ------------------------------------------
+                          SizedBox(
+                            width: anchoColumna,
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 5),
+                              child: SizedBox(
+                                height: 38,
+                                child: TextField(
+                                  controller: medida.cantidad,
+                                  keyboardType: TextInputType.number,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12),
+                                  decoration: decoracionMedida('1'),
+                                  onChanged: (_) {
+                                    setState(() {});
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          // ------------------------------------------
+                          // M²
+                          // ------------------------------------------
+                          SizedBox(
+                            width: anchoColumna,
                             height: 38,
-                            child: TextField(
-                              controller: medida.cantidad,
-                              keyboardType: TextInputType.number,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12),
-                              decoration: decoracionMedida('1'),
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
-                        child: SizedBox(
-                          height: 38,
-                          child: Center(
-                            child: Text(
-                              m2.toStringAsFixed(2).replaceAll('.', ','),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF123B5D),
+                            child: Center(
+                              child: Text(
+                                m2.toStringAsFixed(2).replaceAll('.', ','),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF123B5D),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
 
-                      Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 3,
-                        child: SizedBox(
-                          height: 38,
-                          child: Center(
-                            child: Text(
-                              subtotalLinea > 0
-                                  ? dinero(subtotalLinea)
-                                  : '\$ 0',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF123B5D),
+                          // ------------------------------------------
+                          // SUBTOTAL
+                          // ------------------------------------------
+                          SizedBox(
+                            width: anchoColumna,
+                            height: 38,
+                            child: Center(
+                              child: Text(
+                                subtotalLinea > 0
+                                    ? dinero(subtotalLinea)
+                                    : '\$ 0',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF123B5D),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
 
-                      SizedBox(
-                        width: 28,
-                        child: IconButton(
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(
-                            minWidth: 28,
-                            minHeight: 28,
+                          // ------------------------------------------
+                          // ELIMINAR
+                          // ------------------------------------------
+                          SizedBox(
+                            width: 28,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 28,
+                                minHeight: 28,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  medida.ancho.clear();
+                                  medida.ancho2.clear();
+                                  medida.alto.clear();
+                                  medida.cantidad.text = '1';
+                                });
+                              },
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                                size: 18,
+                              ),
+                            ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              medida.ancho.clear();
-                              medida.ancho2.clear();
-                              medida.alto.clear();
-                              medida.cantidad.text = '1';
-                            });
-                          },
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.red,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
+                        ],
+                      );
+                    },
                   ),
                 );
               }),
 
               const SizedBox(height: 4),
-
               // ------------------------------------------------
               // TOTAL PRODUCTO
               // ------------------------------------------------
