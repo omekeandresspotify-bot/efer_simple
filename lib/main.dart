@@ -751,21 +751,16 @@ class InicioEfer extends StatelessWidget {
 }
 
 // ============================================================
-// MODELO DE PRODUCTO
+// MODELO DE MEDIDA
 // ============================================================
 
-class ItemPresupuesto {
-  String? producto;
-
+class MedidaPresupuesto {
   final TextEditingController ancho;
-
   final TextEditingController ancho2;
-
   final TextEditingController alto;
-
   final TextEditingController cantidad;
 
-  ItemPresupuesto()
+  MedidaPresupuesto()
     : ancho = TextEditingController(),
       ancho2 = TextEditingController(),
       alto = TextEditingController(),
@@ -774,11 +769,52 @@ class ItemPresupuesto {
   double get metrosCuadrados {
     final anchoMm = double.tryParse(ancho.text.replaceAll(',', '.')) ?? 0;
 
+    final ancho2Mm = double.tryParse(ancho2.text.replaceAll(',', '.')) ?? 0;
+
     final altoMm = double.tryParse(alto.text.replaceAll(',', '.')) ?? 0;
 
     final cant = double.tryParse(cantidad.text.replaceAll(',', '.')) ?? 1;
 
+    // Para Shower Door con dos anchos
+    if (ancho2Mm > 0) {
+      return ((anchoMm / 1000) + (ancho2Mm / 1000)) * (altoMm / 1000) * cant;
+    }
+
     return (anchoMm / 1000) * (altoMm / 1000) * cant;
+  }
+
+  void dispose() {
+    ancho.dispose();
+    ancho2.dispose();
+    alto.dispose();
+    cantidad.dispose();
+  }
+}
+
+// ============================================================
+// MODELO DE PRODUCTO
+// ============================================================
+
+class ItemPresupuesto {
+  String? producto;
+
+  final List<MedidaPresupuesto> medidas = [
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+  ];
+
+  // Compatibilidad con el código existente
+  // La primera línea representa la medida principal.
+  TextEditingController get ancho => medidas[0].ancho;
+  TextEditingController get ancho2 => medidas[0].ancho2;
+  TextEditingController get alto => medidas[0].alto;
+  TextEditingController get cantidad => medidas[0].cantidad;
+
+  double get metrosCuadrados {
+    return medidas.fold(0, (total, medida) => total + medida.metrosCuadrados);
   }
 
   double get precioM2 {
@@ -806,10 +842,9 @@ class ItemPresupuesto {
   }
 
   void dispose() {
-    ancho.dispose();
-    ancho2.dispose();
-    alto.dispose();
-    cantidad.dispose();
+    for (final medida in medidas) {
+      medida.dispose();
+    }
   }
 }
 
@@ -1151,14 +1186,44 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       return {
         'producto': item.producto!,
 
-        'ancho': double.tryParse(item.ancho.text.replaceAll(',', '.')) ?? 0,
+        // --------------------------------------------------------
+        // MEDIDAS
+        // --------------------------------------------------------
+        'medidas': item.medidas.map((medida) {
+          double numero(TextEditingController controller) {
+            return double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+          }
 
-        'alto': double.tryParse(item.alto.text.replaceAll(',', '.')) ?? 0,
+          return {
+            'ancho': numero(medida.ancho),
+            'ancho2': numero(medida.ancho2),
+            'alto': numero(medida.alto),
+            'cantidad': numero(medida.cantidad),
+            'metrosCuadrados': medida.metrosCuadrados,
+          };
+        }).toList(),
 
-        'ancho2': double.tryParse(item.ancho2.text.replaceAll(',', '.')) ?? 0,
+        // --------------------------------------------------------
+        // COMPATIBILIDAD CON LA IMAGEN DEL PRESUPUESTO
+        // --------------------------------------------------------
+        // La imagen sigue utilizando la primera medida.
+        'ancho':
+            double.tryParse(item.medidas[0].ancho.text.replaceAll(',', '.')) ??
+            0,
+
+        'alto':
+            double.tryParse(item.medidas[0].alto.text.replaceAll(',', '.')) ??
+            0,
+
+        'ancho2':
+            double.tryParse(item.medidas[0].ancho2.text.replaceAll(',', '.')) ??
+            0,
 
         'cantidad':
-            double.tryParse(item.cantidad.text.replaceAll(',', '.')) ?? 1,
+            double.tryParse(
+              item.medidas[0].cantidad.text.replaceAll(',', '.'),
+            ) ??
+            1,
 
         'metrosCuadrados': item.metrosCuadrados,
 
@@ -1231,6 +1296,32 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
         productos: productos,
       );
     } else {
+      // --------------------------------------------------------
+      // PREPARAR PRODUCTOS CON 5 MEDIDAS
+      // --------------------------------------------------------
+
+      final productosParaGuardar = items.map((item) {
+        double numero(TextEditingController controller) {
+          return double.tryParse(controller.text.replaceAll(',', '.')) ?? 0;
+        }
+
+        return {
+          'producto': item.producto,
+
+          'medidas': item.medidas.map((medida) {
+            return {
+              'ancho': numero(medida.ancho),
+              'ancho2': numero(medida.ancho2),
+              'alto': numero(medida.alto),
+              'cantidad': numero(medida.cantidad),
+              'metrosCuadrados': medida.metrosCuadrados,
+            };
+          }).toList(),
+
+          'precioM2': item.precioM2,
+          'total': item.total,
+        };
+      }).toList();
       await EferDatabase.instance.guardarPresupuestoCompleto(
         numero: numero,
         fecha: fecha,
@@ -1250,7 +1341,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
         total: total,
         observacionesAdicionales: observacionesAdicionalesController.text
             .trim(),
-        productos: productos,
+        productos: productosParaGuardar,
       );
     }
 
@@ -1323,7 +1414,6 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
               ancho: (producto['ancho'] as num).toDouble(),
               ancho2: (producto['ancho2'] as num).toDouble(),
               alto: (producto['alto'] as num).toDouble(),
-
               cantidad: (producto['cantidad'] as num).toDouble(),
               metrosCuadrados: (producto['metrosCuadrados'] as num).toDouble(),
               precioM2: (producto['precioM2'] as num).toDouble(),
@@ -1934,34 +2024,36 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
     );
   }
 
-  // ==========================================================
-  // TARJETA PRODUCTO
-  // ==========================================================
+  // ============================================================
+  // TARJETA PRODUCTO - 5 MEDIDAS EN FORMATO TABLA
+  // ============================================================
 
   Widget construirProducto(int index) {
     final item = items[index];
 
+    final esShowerDoorDosAnchos =
+        item.producto == 'Shower Door Esquinero' ||
+        item.producto == 'Shower Door 2 hojas con fijo';
+
     return Card(
       margin: const EdgeInsets.only(bottom: 18),
-
-      elevation: 3,
-
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-
           children: [
+            // --------------------------------------------------
+            // ENCABEZADO PRODUCTO
+            // --------------------------------------------------
+
             Row(
               children: [
                 Text(
                   'PRODUCTO ${index + 1}',
-
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF123B5D),
                   ),
@@ -1971,16 +2063,25 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
 
                 if (items.length > 1)
                   IconButton(
+                    tooltip: 'Eliminar producto',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 36,
+                    ),
                     onPressed: () {
                       eliminarProducto(index);
                     },
-
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 21,
+                    ),
                   ),
               ],
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
             // --------------------------------------------------
             // PRODUCTO
@@ -1999,170 +2100,437 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                   });
                 }
               },
-
               child: InputDecorator(
                 decoration: InputDecoration(
                   labelText: 'Producto',
-
                   prefixIcon: const Icon(Icons.window),
-
                   suffixIcon: const Icon(Icons.arrow_drop_down),
-
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
                   ),
                 ),
-
                 child: Text(
                   item.producto ?? 'Seleccionar producto',
-
                   style: TextStyle(
                     color: item.producto == null ? Colors.grey : Colors.black,
+                    fontSize: 14,
                   ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 14),
+            if (item.producto != null) ...[
+              const SizedBox(height: 10),
 
-            // --------------------------------------------------
-            // MEDIDAS
-            // --------------------------------------------------
-            Row(
-              children: [
-                Expanded(
-                  child: campo(
-                    (item.producto == 'Shower Door Esquinero' ||
-                            item.producto == 'Shower Door 2 hojas con fijo')
-                        ? 'Ancho 1 (mm)'
-                        : 'Ancho (mm)',
-                    '1200',
-                    item.ancho,
-                    Icons.straighten,
-                    tipo: const TextInputType.numberWithOptions(decimal: true),
-                    onChanged: () {
-                      setState(() {});
-                    },
-                  ),
-                ),
-
-                if (item.producto == 'Shower Door Esquinero' ||
-                    item.producto == 'Shower Door 2 hojas con fijo') ...[
-                  const SizedBox(width: 10),
-
-                  Expanded(
-                    child: campo(
-                      'Ancho 2 (mm)',
-                      '1200',
-                      item.ancho2,
-                      Icons.straighten,
-                      tipo: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      onChanged: () {
-                        setState(() {});
-                      },
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            campo(
-              'Alto (mm)',
-              '2000',
-              item.alto,
-              Icons.height,
-              tipo: const TextInputType.numberWithOptions(decimal: true),
-              onChanged: () {
-                setState(() {});
-              },
-            ),
-
-            campo(
-              'Cantidad',
-              '1',
-              item.cantidad,
-              Icons.numbers,
-
-              tipo: TextInputType.number,
-
-              onChanged: () {
-                setState(() {});
-              },
-            ),
-
-            // --------------------------------------------------
-            // TOTAL PRODUCTO
-            // --------------------------------------------------
-            if (item.producto != null)
+              // ------------------------------------------------
+              // TITULO MEDIDAS
+              // ------------------------------------------------
               Container(
-                margin: const EdgeInsets.only(top: 5),
-
-                padding: const EdgeInsets.all(14),
-
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4F7F9),
-
-                  borderRadius: BorderRadius.circular(12),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
                 ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0EAF7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Medidas del producto (hasta 5 líneas)',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF4B208F),
+                  ),
+                ),
+              ),
 
+              const SizedBox(height: 6),
+
+              // ------------------------------------------------
+              // TABLA
+              // ------------------------------------------------
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
                 child: Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                      children: [
-                        const Text('Superficie'),
-
-                        Text(
-                          '${item.metrosCuadrados.toStringAsFixed(2)} m²',
-
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 7),
+                    // ------------------------------------------
+                    // ENCABEZADOS
+                    // ------------------------------------------
 
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
                       children: [
-                        const Text('Valor m²'),
-
-                        Text(
-                          dinero(item.precioM2),
-
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-
-                    const Divider(),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                      children: [
-                        const Text(
-                          'Total',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-
-                        Text(
-                          dinero(item.total),
-
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF123B5D),
+                        SizedBox(
+                          width: 28,
+                          child: const Text(
+                            '#',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
+
+                        SizedBox(
+                          width: esShowerDoorDosAnchos ? 65 : 78,
+                          child: const Text(
+                            'Ancho (mm)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        if (esShowerDoorDosAnchos)
+                          const SizedBox(
+                            width: 65,
+                            child: Text(
+                              'Ancho 2',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+
+                        const SizedBox(
+                          width: 68,
+                          child: Text(
+                            'Alto (mm)',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          width: 58,
+                          child: Text(
+                            'Cantidad',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          width: 58,
+                          child: Text(
+                            'm²',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(
+                          width: 100,
+                          child: Text(
+                            'Subtotal',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 28),
                       ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    // ------------------------------------------
+                    // 5 MEDIDAS
+                    // ------------------------------------------
+                    ...List.generate(item.medidas.length, (medidaIndex) {
+                      final medida = item.medidas[medidaIndex];
+
+                      final m2 = medida.metrosCuadrados;
+
+                      final subtotalLinea = m2 * item.precioM2;
+
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 5),
+                        child: Row(
+                          children: [
+                            // ------------------------------
+                            // NUMERO
+                            // ------------------------------
+
+                            SizedBox(
+                              width: 28,
+                              child: Text(
+                                '${medidaIndex + 1}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+
+                            // ------------------------------
+                            // ANCHO
+                            // ------------------------------
+                            SizedBox(
+                              width: esShowerDoorDosAnchos ? 65 : 78,
+                              height: 38,
+                              child: TextField(
+                                controller: medida.ancho,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 5,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  hintText: '1200',
+                                  hintStyle: const TextStyle(fontSize: 11),
+                                ),
+                                onChanged: (_) {
+                                  setState(() {});
+                                },
+                              ),
+                            ),
+
+                            // ------------------------------
+                            // ANCHO 2
+                            // ------------------------------
+                            if (esShowerDoorDosAnchos) const SizedBox(width: 5),
+
+                            if (esShowerDoorDosAnchos)
+                              SizedBox(
+                                width: 65,
+                                height: 38,
+                                child: TextField(
+                                  controller: medida.ancho2,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                        decimal: true,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(fontSize: 12),
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 5,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    hintText: '1200',
+                                    hintStyle: const TextStyle(fontSize: 11),
+                                  ),
+                                  onChanged: (_) {
+                                    setState(() {});
+                                  },
+                                ),
+                              ),
+
+                            const SizedBox(width: 5),
+
+                            // ------------------------------
+                            // ALTO
+                            // ------------------------------
+                            SizedBox(
+                              width: 68,
+                              height: 38,
+                              child: TextField(
+                                controller: medida.alto,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 5,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  hintText: '2000',
+                                  hintStyle: const TextStyle(fontSize: 11),
+                                ),
+                                onChanged: (_) {
+                                  setState(() {});
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(width: 5),
+
+                            // ------------------------------
+                            // CANTIDAD
+                            // ------------------------------
+                            SizedBox(
+                              width: 58,
+                              height: 38,
+                              child: TextField(
+                                controller: medida.cantidad,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(fontSize: 12),
+                                decoration: InputDecoration(
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 5,
+                                    vertical: 5,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  hintText: '1',
+                                  hintStyle: const TextStyle(fontSize: 11),
+                                ),
+                                onChanged: (_) {
+                                  setState(() {});
+                                },
+                              ),
+                            ),
+
+                            const SizedBox(width: 5),
+
+                            // ------------------------------
+                            // M2
+                            // ------------------------------
+                            SizedBox(
+                              width: 58,
+                              child: Text(
+                                m2 > 0 ? m2.toStringAsFixed(2) : '0,00',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF4A5270),
+                                ),
+                              ),
+                            ),
+
+                            // ------------------------------
+                            // SUBTOTAL
+                            // ------------------------------
+                            SizedBox(
+                              width: 100,
+                              child: Text(
+                                subtotalLinea > 0
+                                    ? dinero(subtotalLinea)
+                                    : '\$ 0',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+
+                            // ------------------------------
+                            // ELIMINAR MEDIDA
+                            // ------------------------------
+                            SizedBox(
+                              width: 28,
+                              child: IconButton(
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(
+                                  minWidth: 28,
+                                  minHeight: 28,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    medida.ancho.clear();
+                                    medida.ancho2.clear();
+                                    medida.alto.clear();
+                                    medida.cantidad.text = '1';
+                                  });
+                                },
+                                icon: const Icon(
+                                  Icons.delete_outline,
+                                  color: Colors.red,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // ------------------------------------------------
+              // TOTAL PRODUCTO
+              // ------------------------------------------------
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEAF2F8),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  children: [
+                    const Text(
+                      'TOTAL PRODUCTO',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    Text(
+                      '${item.metrosCuadrados.toStringAsFixed(2)} m²',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    const SizedBox(width: 15),
+
+                    Text(
+                      dinero(item.total),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF123B5D),
+                      ),
                     ),
                   ],
                 ),
               ),
+            ],
           ],
         ),
       ),

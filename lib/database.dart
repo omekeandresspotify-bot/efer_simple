@@ -33,7 +33,7 @@ class EferDatabase {
       return await databaseFactoryFfiWeb.openDatabase(
         'efer.db',
         options: OpenDatabaseOptions(
-          version: 9,
+          version: 10,
           onCreate: _createDB,
           onUpgrade: _upgradeDB,
         ),
@@ -46,7 +46,7 @@ class EferDatabase {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -162,16 +162,47 @@ class EferDatabase {
 
     await db.execute('''
       CREATE TABLE productos_presupuesto (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        presupuestoId INTEGER NOT NULL,
-        producto TEXT NOT NULL,
-        ancho REAL NOT NULL,
-        ancho2 REAL NOT NULL DEFAULT 0,
-        alto REAL NOT NULL,
-        cantidad REAL NOT NULL,
-        metrosCuadrados REAL NOT NULL,
-        precioM2 REAL NOT NULL,
-        total REAL NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  presupuestoId INTEGER NOT NULL,
+  producto TEXT NOT NULL,
+
+  ancho REAL NOT NULL,
+  ancho2 REAL NOT NULL DEFAULT 0,
+  alto REAL NOT NULL,
+  cantidad REAL NOT NULL,
+  metrosCuadrados REAL NOT NULL,
+
+  ancho2_m2 REAL NOT NULL DEFAULT 0,
+  ancho2_2 REAL NOT NULL DEFAULT 0,
+  alto2 REAL NOT NULL DEFAULT 0,
+  cantidad2 REAL NOT NULL DEFAULT 0,
+  metrosCuadrados2 REAL NOT NULL DEFAULT 0,
+
+  ancho3 REAL NOT NULL DEFAULT 0,
+  ancho2_3 REAL NOT NULL DEFAULT 0,
+  alto3 REAL NOT NULL DEFAULT 0,
+  cantidad3 REAL NOT NULL DEFAULT 0,
+  metrosCuadrados3 REAL NOT NULL DEFAULT 0,
+
+  ancho4 REAL NOT NULL DEFAULT 0,
+  ancho2_4 REAL NOT NULL DEFAULT 0,
+  alto4 REAL NOT NULL DEFAULT 0,
+  cantidad4 REAL NOT NULL DEFAULT 0,
+  metrosCuadrados4 REAL NOT NULL DEFAULT 0,
+
+  ancho5 REAL NOT NULL DEFAULT 0,
+  ancho2_5 REAL NOT NULL DEFAULT 0,
+  alto5 REAL NOT NULL DEFAULT 0,
+  cantidad5 REAL NOT NULL DEFAULT 0,
+  metrosCuadrados5 REAL NOT NULL DEFAULT 0,
+
+  precioM2 REAL NOT NULL,
+  total REAL NOT NULL,
+
+  FOREIGN KEY (presupuestoId)
+    REFERENCES presupuestos (id)
+    ON DELETE CASCADE
+)
 
         FOREIGN KEY (presupuestoId)
           REFERENCES presupuestos (id)
@@ -700,6 +731,113 @@ class EferDatabase {
         ALTER TABLE presupuestos
         ADD COLUMN observacionesAdicionales TEXT NOT NULL DEFAULT ''
       ''');
+    }
+
+    // --------------------------------------------------------
+    // VERSION 9 → 10
+    // 5 MEDIDAS POR PRODUCTO
+    // --------------------------------------------------------
+
+    if (oldVersion < 10) {
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho2_m2 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho2_2 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN alto2 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN cantidad2 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN metrosCuadrados2 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho3 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho2_3 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN alto3 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN cantidad3 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN metrosCuadrados3 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho4 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho2_4 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN alto4 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN cantidad4 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN metrosCuadrados4 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho5 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN ancho2_5 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN alto5 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN cantidad5 REAL NOT NULL DEFAULT 0
+  ''');
+
+      await db.execute('''
+    ALTER TABLE productos_presupuesto
+    ADD COLUMN metrosCuadrados5 REAL NOT NULL DEFAULT 0
+  ''');
     }
   }
 
@@ -1437,14 +1575,62 @@ class EferDatabase {
       });
 
       for (final producto in productos) {
+        final medidas =
+            producto['medidas'] as List<Map<String, dynamic>>? ?? [];
+
+        double valor(List<dynamic> lista, int index, String campo) {
+          if (index >= lista.length) {
+            return 0;
+          }
+
+          final valor = lista[index][campo];
+
+          if (valor is num) {
+            return valor.toDouble();
+          }
+
+          return double.tryParse(valor?.toString() ?? '0') ?? 0;
+        }
+
         await txn.insert('productos_presupuesto', {
           'presupuestoId': presupuestoId,
           'producto': producto['producto'],
-          'ancho': producto['ancho'],
-          'ancho2': producto['ancho2'],
-          'alto': producto['alto'],
-          'cantidad': producto['cantidad'],
-          'metrosCuadrados': producto['metrosCuadrados'],
+
+          // MEDIDA 1
+          'ancho': valor(medidas, 0, 'ancho'),
+          'ancho2': valor(medidas, 0, 'ancho2'),
+          'alto': valor(medidas, 0, 'alto'),
+          'cantidad': valor(medidas, 0, 'cantidad'),
+          'metrosCuadrados': valor(medidas, 0, 'metrosCuadrados'),
+
+          // MEDIDA 2
+          'ancho2_m2': valor(medidas, 1, 'ancho'),
+          'ancho2_2': valor(medidas, 1, 'ancho2'),
+          'alto2': valor(medidas, 1, 'alto'),
+          'cantidad2': valor(medidas, 1, 'cantidad'),
+          'metrosCuadrados2': valor(medidas, 1, 'metrosCuadrados'),
+
+          // MEDIDA 3
+          'ancho3': valor(medidas, 2, 'ancho'),
+          'ancho2_3': valor(medidas, 2, 'ancho2'),
+          'alto3': valor(medidas, 2, 'alto'),
+          'cantidad3': valor(medidas, 2, 'cantidad'),
+          'metrosCuadrados3': valor(medidas, 2, 'metrosCuadrados'),
+
+          // MEDIDA 4
+          'ancho4': valor(medidas, 3, 'ancho'),
+          'ancho2_4': valor(medidas, 3, 'ancho2'),
+          'alto4': valor(medidas, 3, 'alto'),
+          'cantidad4': valor(medidas, 3, 'cantidad'),
+          'metrosCuadrados4': valor(medidas, 3, 'metrosCuadrados'),
+
+          // MEDIDA 5
+          'ancho5': valor(medidas, 4, 'ancho'),
+          'ancho2_5': valor(medidas, 4, 'ancho2'),
+          'alto5': valor(medidas, 4, 'alto'),
+          'cantidad5': valor(medidas, 4, 'cantidad'),
+          'metrosCuadrados5': valor(medidas, 4, 'metrosCuadrados'),
+
           'precioM2': producto['precioM2'],
           'total': producto['total'],
         });
