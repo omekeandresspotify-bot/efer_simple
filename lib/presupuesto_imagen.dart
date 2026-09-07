@@ -9,15 +9,37 @@ import 'package:share_plus/share_plus.dart';
 // MODELO DEL PRODUCTO PARA LA IMAGEN
 // ============================================================
 
-class ProductoImagen {
-  final String producto;
+class MedidaImagen {
   final double ancho;
   final double ancho2;
   final double alto;
   final double cantidad;
   final double metrosCuadrados;
+
+  const MedidaImagen({
+    required this.ancho,
+    required this.ancho2,
+    required this.alto,
+    required this.cantidad,
+    required this.metrosCuadrados,
+  });
+}
+
+class ProductoImagen {
+  final String producto;
+
+  // Datos antiguos: los mantenemos para no romper nada.
+  final double ancho;
+  final double ancho2;
+  final double alto;
+  final double cantidad;
+  final double metrosCuadrados;
+
   final double precioM2;
   final double total;
+
+  // NUEVO: las 5 medidas del producto.
+  final List<MedidaImagen> medidas;
 
   ProductoImagen({
     required this.producto,
@@ -28,6 +50,7 @@ class ProductoImagen {
     required this.metrosCuadrados,
     required this.precioM2,
     required this.total,
+    this.medidas = const [],
   });
 }
 
@@ -1016,12 +1039,21 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
   // ==========================================================
 
   Widget _filaProducto(int index, ProductoImagen producto) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 13),
+    final medidas = producto.medidas.isNotEmpty
+        ? producto.medidas
+        : [
+            MedidaImagen(
+              ancho: producto.ancho,
+              ancho2: producto.ancho2,
+              alto: producto.alto,
+              cantidad: producto.cantidad,
+              metrosCuadrados: producto.metrosCuadrados,
+            ),
+          ];
 
+    return Container(
       decoration: BoxDecoration(
         color: index.isEven ? Colors.white : const Color(0xFFF6F8FA),
-
         border: const Border(
           left: BorderSide(color: Color(0xFFD4DDE4)),
           right: BorderSide(color: Color(0xFFD4DDE4)),
@@ -1029,106 +1061,156 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
         ),
       ),
 
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-
+      child: Column(
         children: [
-          SizedBox(
-            width: 35,
+          ...List.generate(medidas.length, (medidaIndex) {
+            final medida = medidas[medidaIndex];
 
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
+            final medidaTexto =
+                (producto.producto == 'Shower Door Esquinero' ||
+                    producto.producto == 'Shower Door 2 hojas con fijo')
+                ? '${medida.ancho.toStringAsFixed(0)} × '
+                      '${medida.ancho2.toStringAsFixed(0)} × '
+                      '${medida.alto.toStringAsFixed(0)} mm'
+                : '${medida.ancho.toStringAsFixed(0)} × '
+                      '${medida.alto.toStringAsFixed(0)} mm';
 
-          Expanded(
-            flex: 4,
+            final subtotalLinea = medida.metrosCuadrados * producto.precioM2;
 
-            child: Text(
-              producto.producto,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF263746),
+            return Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
+
+              decoration: BoxDecoration(
+                color: medidaIndex.isEven
+                    ? Colors.white
+                    : const Color(0xFFF9FAFB),
+                border: medidaIndex < medidas.length - 1
+                    ? const Border(bottom: BorderSide(color: Color(0xFFE1E6EA)))
+                    : null,
               ),
-            ),
-          ),
 
-          Expanded(
-            flex: 3,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
 
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // DESCRIPCIÓN
+                  Expanded(
+                    flex: 4,
+                    child: Text(
+                      medidaIndex == 0 ? producto.producto : '',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF263746),
+                      ),
+                    ),
+                  ),
 
+                  // MEDIDA
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          medidaTexto,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+
+                        const SizedBox(height: 2),
+
+                        Text(
+                          '${medida.metrosCuadrados.toStringAsFixed(2)} m²',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // CANTIDAD
+                  SizedBox(
+                    width: 55,
+                    child: Text(
+                      medida.cantidad.toStringAsFixed(0),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+
+                  // VALOR UNITARIO
+                  SizedBox(
+                    width: 105,
+                    child: Text(
+                      dinero(subtotalLinea),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+
+                  // SUBTOTAL
+                  SizedBox(
+                    width: 115,
+                    child: Text(
+                      dinero(subtotalLinea),
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF123B5D),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+          // TOTAL DEL PRODUCTO
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: const BoxDecoration(color: Color(0xFFEAF2F8)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  (producto.producto == 'Shower Door Esquinero' ||
-                          producto.producto == 'Shower Door 2 hojas con fijo')
-                      ? '${producto.ancho.toStringAsFixed(0)} × '
-                            '${producto.ancho2.toStringAsFixed(0)} × '
-                            '${producto.alto.toStringAsFixed(0)} mm'
-                      : '${producto.ancho.toStringAsFixed(0)} × '
-                            '${producto.alto.toStringAsFixed(0)} mm',
-
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                const Text(
+                  'TOTAL PRODUCTO',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF123B5D),
                   ),
                 ),
 
-                const SizedBox(height: 3),
+                Row(
+                  children: [
+                    Text(
+                      '${producto.metrosCuadrados.toStringAsFixed(2)} m²',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
 
-                Text(
-                  '${producto.metrosCuadrados.toStringAsFixed(2)} m²',
+                    const SizedBox(width: 15),
 
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    Text(
+                      dinero(producto.total),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF123B5D),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ),
-
-          SizedBox(
-            width: 55,
-
-            child: Text(
-              producto.cantidad.toStringAsFixed(0),
-
-              textAlign: TextAlign.center,
-
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
-
-          SizedBox(
-            width: 105,
-
-            child: Text(
-              dinero(
-                producto.cantidad > 0
-                    ? producto.total / producto.cantidad
-                    : producto.total,
-              ),
-
-              textAlign: TextAlign.right,
-
-              style: const TextStyle(fontSize: 12),
-            ),
-          ),
-
-          SizedBox(
-            width: 115,
-
-            child: Text(
-              dinero(producto.total),
-
-              textAlign: TextAlign.right,
-
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF123B5D),
-              ),
             ),
           ),
         ],
