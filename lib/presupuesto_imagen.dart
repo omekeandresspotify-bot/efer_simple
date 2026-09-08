@@ -113,12 +113,6 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        generarImagen();
-      }
-    });
   }
 
   // ==========================================================
@@ -256,20 +250,9 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
         throw Exception('No se pudo generar la imagen');
       }
 
-      final archivo = XFile.fromData(
-        bytes,
-        mimeType: 'image/png',
-        name: 'Presupuesto_EFER_${widget.numero}.png',
-      );
-
-      await SharePlus.instance.share(
-        ShareParams(
-          files: [archivo],
-          title: 'Presupuesto EFER Nº ${widget.numero}',
-          fileNameOverrides: ['Presupuesto_EFER_${widget.numero}.png'],
-          downloadFallbackEnabled: true,
-        ),
-      );
+      // ==========================================================
+      // GENERAR IMAGEN
+      // ==========================================================
     } catch (e) {
       if (!mounted) return;
 
@@ -1097,7 +1080,7 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                   Expanded(
                     flex: 4,
                     child: Text(
-                      medidaIndex == 0 ? producto.producto : '',
+                      producto.producto,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

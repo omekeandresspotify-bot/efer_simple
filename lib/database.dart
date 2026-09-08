@@ -161,54 +161,49 @@ class EferDatabase {
     // --------------------------------------------------------
 
     await db.execute('''
-      CREATE TABLE productos_presupuesto (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  presupuestoId INTEGER NOT NULL,
-  producto TEXT NOT NULL,
+  CREATE TABLE productos_presupuesto (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    presupuestoId INTEGER NOT NULL,
+    producto TEXT NOT NULL,
 
-  ancho REAL NOT NULL,
-  ancho2 REAL NOT NULL DEFAULT 0,
-  alto REAL NOT NULL,
-  cantidad REAL NOT NULL,
-  metrosCuadrados REAL NOT NULL,
+    ancho REAL NOT NULL,
+    ancho2 REAL NOT NULL DEFAULT 0,
+    alto REAL NOT NULL,
+    cantidad REAL NOT NULL,
+    metrosCuadrados REAL NOT NULL,
 
-  ancho2_m2 REAL NOT NULL DEFAULT 0,
-  ancho2_2 REAL NOT NULL DEFAULT 0,
-  alto2 REAL NOT NULL DEFAULT 0,
-  cantidad2 REAL NOT NULL DEFAULT 0,
-  metrosCuadrados2 REAL NOT NULL DEFAULT 0,
+    ancho2_m2 REAL NOT NULL DEFAULT 0,
+    ancho2_2 REAL NOT NULL DEFAULT 0,
+    alto2 REAL NOT NULL DEFAULT 0,
+    cantidad2 REAL NOT NULL DEFAULT 0,
+    metrosCuadrados2 REAL NOT NULL DEFAULT 0,
 
-  ancho3 REAL NOT NULL DEFAULT 0,
-  ancho2_3 REAL NOT NULL DEFAULT 0,
-  alto3 REAL NOT NULL DEFAULT 0,
-  cantidad3 REAL NOT NULL DEFAULT 0,
-  metrosCuadrados3 REAL NOT NULL DEFAULT 0,
+    ancho3 REAL NOT NULL DEFAULT 0,
+    ancho2_3 REAL NOT NULL DEFAULT 0,
+    alto3 REAL NOT NULL DEFAULT 0,
+    cantidad3 REAL NOT NULL DEFAULT 0,
+    metrosCuadrados3 REAL NOT NULL DEFAULT 0,
 
-  ancho4 REAL NOT NULL DEFAULT 0,
-  ancho2_4 REAL NOT NULL DEFAULT 0,
-  alto4 REAL NOT NULL DEFAULT 0,
-  cantidad4 REAL NOT NULL DEFAULT 0,
-  metrosCuadrados4 REAL NOT NULL DEFAULT 0,
+    ancho4 REAL NOT NULL DEFAULT 0,
+    ancho2_4 REAL NOT NULL DEFAULT 0,
+    alto4 REAL NOT NULL DEFAULT 0,
+    cantidad4 REAL NOT NULL DEFAULT 0,
+    metrosCuadrados4 REAL NOT NULL DEFAULT 0,
 
-  ancho5 REAL NOT NULL DEFAULT 0,
-  ancho2_5 REAL NOT NULL DEFAULT 0,
-  alto5 REAL NOT NULL DEFAULT 0,
-  cantidad5 REAL NOT NULL DEFAULT 0,
-  metrosCuadrados5 REAL NOT NULL DEFAULT 0,
+    ancho5 REAL NOT NULL DEFAULT 0,
+    ancho2_5 REAL NOT NULL DEFAULT 0,
+    alto5 REAL NOT NULL DEFAULT 0,
+    cantidad5 REAL NOT NULL DEFAULT 0,
+    metrosCuadrados5 REAL NOT NULL DEFAULT 0,
 
-  precioM2 REAL NOT NULL,
-  total REAL NOT NULL,
+    precioM2 REAL NOT NULL,
+    total REAL NOT NULL,
 
-  FOREIGN KEY (presupuestoId)
-    REFERENCES presupuestos (id)
-    ON DELETE CASCADE
-)
-
-        FOREIGN KEY (presupuestoId)
-          REFERENCES presupuestos (id)
-          ON DELETE CASCADE
-      )
-    ''');
+    FOREIGN KEY (presupuestoId)
+      REFERENCES presupuestos (id)
+      ON DELETE CASCADE
+  )
+''');
 
     // --------------------------------------------------------
     // TRABAJOS
