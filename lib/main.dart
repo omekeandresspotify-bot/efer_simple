@@ -924,6 +924,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       final presupuesto = await EferDatabase.instance.obtenerPresupuestoPorId(
         widget.presupuestoId!,
       );
+
       final productos = await EferDatabase.instance.obtenerProductos(
         widget.presupuestoId!,
       );
@@ -933,15 +934,24 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       }
 
       nombreController.text = (presupuesto['nombreCliente'] ?? '').toString();
+
       telefonoController.text = (presupuesto['telefono'] ?? '').toString();
+
       correoController.text = (presupuesto['correo'] ?? '').toString();
+
       direccionController.text = (presupuesto['direccion'] ?? '').toString();
+
       colorSeleccionado = (presupuesto['color'] ?? 'MATE').toString();
+
       clienteSeleccionadoId = (presupuesto['clienteId'] as num?)?.toInt();
+
       observacionesAdicionalesController.text =
           (presupuesto['observacionesAdicionales'] ?? '').toString();
+
       descuentoTipo = (presupuesto['descuentoTipo'] ?? 'NINGUNO').toString();
+
       final descuento = (presupuesto['descuento'] as num?)?.toDouble() ?? 0;
+
       if (descuentoTipo == 'PORCENTAJE') {
         descuentoController.text = descuento
             .toStringAsFixed(2)
@@ -951,19 +961,34 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       } else {
         descuentoController.clear();
       }
+
       aplicarIva = ((presupuesto['iva'] as num?)?.toDouble() ?? 0) > 0;
+
+      // ----------------------------------------------------------
+      // LIMPIAR PRODUCTOS ACTUALES
+      // ----------------------------------------------------------
 
       for (final item in items) {
         item.dispose();
       }
+
       items.clear();
+
+      // ----------------------------------------------------------
+      // CARGAR PRODUCTOS
+      // ----------------------------------------------------------
 
       if (productos.isEmpty) {
         items.add(ItemPresupuesto());
       } else {
         for (final producto in productos) {
           final item = ItemPresupuesto();
+
           item.producto = producto['producto']?.toString();
+
+          // ------------------------------------------------------
+          // CAMPOS DE LAS 5 MEDIDAS
+          // ------------------------------------------------------
 
           final campos = [
             ['ancho', 'ancho2', 'alto', 'cantidad'],
@@ -973,20 +998,71 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
             ['ancho5', 'ancho2_5', 'alto5', 'cantidad5'],
           ];
 
-          for (int i = 0; i < item.medidas.length; i++) {
-            final medida = item.medidas[i];
-            final nomes = campos[i];
+          // ------------------------------------------------------
+          // DETERMINAR CUÁNTAS MEDIDAS EXISTEN
+          // ------------------------------------------------------
 
-            medida.ancho.text = ((producto[nomes[0]] as num?)?.toDouble() ?? 0)
-                .toStringAsFixed(0);
-            medida.ancho2.text = ((producto[nomes[1]] as num?)?.toDouble() ?? 0)
-                .toStringAsFixed(0);
-            medida.alto.text = ((producto[nomes[2]] as num?)?.toDouble() ?? 0)
-                .toStringAsFixed(0);
-            medida.cantidad.text =
-                ((producto[nomes[3]] as num?)?.toDouble() ?? 1).toStringAsFixed(
-                  0,
-                );
+          int cantidadMedidas = 1;
+
+          for (int i = 1; i < campos.length; i++) {
+            final nombres = campos[i];
+
+            final ancho = (producto[nombres[0]] as num?)?.toDouble() ?? 0;
+
+            final ancho2 = (producto[nombres[1]] as num?)?.toDouble() ?? 0;
+
+            final alto = (producto[nombres[2]] as num?)?.toDouble() ?? 0;
+
+            final cantidad = (producto[nombres[3]] as num?)?.toDouble() ?? 0;
+
+            if (ancho > 0 || ancho2 > 0 || alto > 0 || cantidad > 0) {
+              cantidadMedidas = i + 1;
+            }
+          }
+
+          // ------------------------------------------------------
+          // CREAR LAS MEDIDAS NECESARIAS
+          // ------------------------------------------------------
+
+          item.medidas.clear();
+
+          for (int i = 0; i < cantidadMedidas; i++) {
+            item.medidas.add(MedidaPresupuesto());
+          }
+
+          // ------------------------------------------------------
+          // CARGAR DATOS DE CADA MEDIDA
+          // ------------------------------------------------------
+
+          for (int i = 0; i < cantidadMedidas; i++) {
+            final medida = item.medidas[i];
+            final nombres = campos[i];
+
+            final ancho = (producto[nombres[0]] as num?)?.toDouble() ?? 0;
+
+            final ancho2 = (producto[nombres[1]] as num?)?.toDouble() ?? 0;
+
+            final alto = (producto[nombres[2]] as num?)?.toDouble() ?? 0;
+
+            final cantidad = (producto[nombres[3]] as num?)?.toDouble() ?? 1;
+
+            medida.ancho.text = ancho > 0 ? ancho.toStringAsFixed(0) : '';
+
+            medida.ancho2.text = ancho2 > 0 ? ancho2.toStringAsFixed(0) : '';
+
+            medida.alto.text = alto > 0 ? alto.toStringAsFixed(0) : '';
+
+            medida.cantidad.text = cantidad > 0
+                ? cantidad.toStringAsFixed(0)
+                : '1';
+          }
+
+          // ------------------------------------------------------
+          // ASEGURAR AL MENOS UNA MEDIDA
+          // ------------------------------------------------------
+
+          if (item.medidas.isEmpty) {
+            item.medidas.add(MedidaPresupuesto());
           }
 
           items.add(item);
@@ -994,11 +1070,16 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       }
     } catch (e) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No se pudo cargar el presupuesto: $e')),
       );
     } finally {
-      if (mounted) setState(() => cargandoEdicion = false);
+      if (mounted) {
+        setState(() {
+          cargandoEdicion = false;
+        });
+      }
     }
   }
 
