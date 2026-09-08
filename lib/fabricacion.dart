@@ -1017,30 +1017,60 @@ class PautaFabricacionGeneralPage extends StatelessWidget {
 
     final errores = <String>[];
 
+    // ==========================================================
+    // GENERAR PAUTA PARA TODAS LAS MEDIDAS DEL PRESUPUESTO
+    // ==========================================================
+
     for (final producto in productos) {
       final nombre = producto['producto']?.toString() ?? 'Producto';
 
-      final ancho = double.tryParse(producto['ancho']?.toString() ?? '') ?? 0;
+      // Cada grupo corresponde a una medida agregada al presupuesto.
+      final campos = [
+        ['ancho', 'ancho2', 'alto', 'cantidad'],
+        ['ancho2_m2', 'ancho2_2', 'alto2', 'cantidad2'],
+        ['ancho3', 'ancho2_3', 'alto3', 'cantidad3'],
+        ['ancho4', 'ancho2_4', 'alto4', 'cantidad4'],
+        ['ancho5', 'ancho2_5', 'alto5', 'cantidad5'],
+      ];
 
-      final ancho2 = double.tryParse(producto['ancho2']?.toString() ?? '');
+      for (int i = 0; i < campos.length; i++) {
+        final nombres = campos[i];
 
-      final alto = double.tryParse(producto['alto']?.toString() ?? '') ?? 0;
+        final ancho =
+            double.tryParse(producto[nombres[0]]?.toString() ?? '') ?? 0;
 
-      final cantidad =
-          int.tryParse(producto['cantidad']?.toString() ?? '') ?? 1;
+        final ancho2 =
+            double.tryParse(producto[nombres[1]]?.toString() ?? '') ?? 0;
 
-      try {
-        final resultado = PautaFabricacion.generar(
-          producto: nombre,
-          ancho: ancho,
-          ancho2: ancho2,
-          alto: alto,
-          cantidadVentanas: cantidad,
-        );
+        final alto =
+            double.tryParse(producto[nombres[2]]?.toString() ?? '') ?? 0;
 
-        resultados.add(resultado);
-      } catch (_) {
-        errores.add(nombre);
+        final cantidadValor =
+            double.tryParse(producto[nombres[3]]?.toString() ?? '') ?? 0;
+
+        // Una medida existe solamente si tiene dimensiones.
+        // No usamos "cantidad" para detectar si existe,
+        // porque las medidas nuevas pueden tener cantidad = 1
+        // aunque todavía estén vacías.
+        if (ancho <= 0 && ancho2 <= 0 && alto <= 0) {
+          continue;
+        }
+
+        final cantidad = cantidadValor > 0 ? cantidadValor.round() : 1;
+
+        try {
+          final resultado = PautaFabricacion.generar(
+            producto: nombre,
+            ancho: ancho,
+            ancho2: ancho2 > 0 ? ancho2 : null,
+            alto: alto,
+            cantidadVentanas: cantidad,
+          );
+
+          resultados.add(resultado);
+        } catch (_) {
+          errores.add('$nombre - Medida ${i + 1}');
+        }
       }
     }
 
