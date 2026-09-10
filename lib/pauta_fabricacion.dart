@@ -37,6 +37,70 @@ class PautaFabricacion {
   // GENERADOR PRINCIPAL
   // ==========================================================
 
+  // ==========================================================
+  // GENERAR TODAS LAS MEDIDAS DE UN PRODUCTO
+  // ==========================================================
+
+  static List<ResultadoFabricacion> generarTodas({
+    required String producto,
+    required List<Map<String, dynamic>> medidas,
+  }) {
+    final resultados = <ResultadoFabricacion>[];
+
+    double numero(dynamic valor) {
+      if (valor is num) {
+        return valor.toDouble();
+      }
+
+      return double.tryParse(valor?.toString() ?? '0') ?? 0;
+    }
+
+    for (final medida in medidas) {
+      final ancho = numero(medida['ancho']);
+      final ancho2 = numero(medida['ancho2']);
+      final alto = numero(medida['alto']);
+      final cantidad = numero(medida['cantidad']).round();
+
+      // No generar pautas para medidas vacías.
+      if (ancho <= 0 || alto <= 0) {
+        continue;
+      }
+
+      try {
+        final resultado = generar(
+          producto: producto,
+          ancho: ancho,
+          ancho2: ancho2 > 0 ? ancho2 : null,
+          alto: alto,
+          cantidadVentanas: cantidad > 0 ? cantidad : 1,
+        );
+
+        resultados.add(resultado);
+      } catch (e) {
+        // ------------------------------------------------------
+        // PRODUCTO SIN PAUTA
+        // ------------------------------------------------------
+        // Simplemente se omite esta medida y se continúa
+        // procesando las siguientes.
+        if (e is ArgumentError &&
+            e.message.toString().contains(
+              'Producto sin pauta de fabricación',
+            )) {
+          continue;
+        }
+
+        // ------------------------------------------------------
+        // OTRO ERROR
+        // ------------------------------------------------------
+        // También continuamos con la siguiente medida para que
+        // un problema en una medida no elimine las demás.
+        continue;
+      }
+    }
+
+    return resultados;
+  }
+
   static ResultadoFabricacion generar({
     required String producto,
     required double ancho,

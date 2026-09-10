@@ -1730,6 +1730,7 @@ class EferDatabase {
     required List<Map<String, dynamic>> productos,
   }) async {
     final db = await database;
+
     await db.transaction((txn) async {
       await txn.update(
         'presupuestos',
@@ -1761,15 +1762,82 @@ class EferDatabase {
         whereArgs: [presupuestoId],
       );
 
+      // ==========================================================
+      // VOLVER A GUARDAR TODOS LOS PRODUCTOS Y SUS 5 MEDIDAS
+      // ==========================================================
+
       for (final producto in productos) {
+        final medidas = (producto['medidas'] as List?) ?? const [];
+
+        double valor(List<dynamic> lista, int index, String campo) {
+          if (index >= lista.length) {
+            return 0;
+          }
+
+          final dato = lista[index][campo];
+
+          if (dato is num) {
+            return dato.toDouble();
+          }
+
+          return double.tryParse(
+                dato?.toString().replaceAll(',', '.') ?? '0',
+              ) ??
+              0;
+        }
+
         await txn.insert('productos_presupuesto', {
           'presupuestoId': presupuestoId,
           'producto': producto['producto'],
-          'ancho': producto['ancho'],
-          'ancho2': producto['ancho2'],
-          'alto': producto['alto'],
-          'cantidad': producto['cantidad'],
-          'metrosCuadrados': producto['metrosCuadrados'],
+
+          // ======================================================
+          // MEDIDA 1
+          // ======================================================
+          'ancho': valor(medidas, 0, 'ancho'),
+          'ancho2': valor(medidas, 0, 'ancho2'),
+          'alto': valor(medidas, 0, 'alto'),
+          'cantidad': valor(medidas, 0, 'cantidad'),
+          'metrosCuadrados': valor(medidas, 0, 'metrosCuadrados'),
+
+          // ======================================================
+          // MEDIDA 2
+          // ======================================================
+          'ancho2_m2': valor(medidas, 1, 'ancho'),
+          'ancho2_2': valor(medidas, 1, 'ancho2'),
+          'alto2': valor(medidas, 1, 'alto'),
+          'cantidad2': valor(medidas, 1, 'cantidad'),
+          'metrosCuadrados2': valor(medidas, 1, 'metrosCuadrados'),
+
+          // ======================================================
+          // MEDIDA 3
+          // ======================================================
+          'ancho3': valor(medidas, 2, 'ancho'),
+          'ancho2_3': valor(medidas, 2, 'ancho2'),
+          'alto3': valor(medidas, 2, 'alto'),
+          'cantidad3': valor(medidas, 2, 'cantidad'),
+          'metrosCuadrados3': valor(medidas, 2, 'metrosCuadrados'),
+
+          // ======================================================
+          // MEDIDA 4
+          // ======================================================
+          'ancho4': valor(medidas, 3, 'ancho'),
+          'ancho2_4': valor(medidas, 3, 'ancho2'),
+          'alto4': valor(medidas, 3, 'alto'),
+          'cantidad4': valor(medidas, 3, 'cantidad'),
+          'metrosCuadrados4': valor(medidas, 3, 'metrosCuadrados'),
+
+          // ======================================================
+          // MEDIDA 5
+          // ======================================================
+          'ancho5': valor(medidas, 4, 'ancho'),
+          'ancho2_5': valor(medidas, 4, 'ancho2'),
+          'alto5': valor(medidas, 4, 'alto'),
+          'cantidad5': valor(medidas, 4, 'cantidad'),
+          'metrosCuadrados5': valor(medidas, 4, 'metrosCuadrados'),
+
+          // ======================================================
+          // PRECIO Y TOTAL
+          // ======================================================
           'precioM2': producto['precioM2'],
           'total': producto['total'],
         });

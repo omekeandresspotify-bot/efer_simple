@@ -794,7 +794,13 @@ class MedidaPresupuesto {
 class ItemPresupuesto {
   String? producto;
 
-  final List<MedidaPresupuesto> medidas = [MedidaPresupuesto()];
+  final List<MedidaPresupuesto> medidas = [
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+    MedidaPresupuesto(),
+  ];
 
   TextEditingController get ancho => medidas[0].ancho;
   TextEditingController get ancho2 => medidas[0].ancho2;
@@ -872,23 +878,6 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
   final List<ItemPresupuesto> items = [ItemPresupuesto()];
 
   // ==========================================================
-  // AGREGAR MEDIDA
-  // ==========================================================
-
-  void agregarMedida(ItemPresupuesto item) {
-    if (item.medidas.length >= 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Máximo 5 medidas por producto')),
-      );
-      return;
-    }
-
-    setState(() {
-      item.medidas.add(MedidaPresupuesto());
-    });
-  }
-
-  // ==========================================================
   // OPCIONES DEL PRESUPUESTO
   // ==========================================================
 
@@ -924,7 +913,6 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       final presupuesto = await EferDatabase.instance.obtenerPresupuestoPorId(
         widget.presupuestoId!,
       );
-
       final productos = await EferDatabase.instance.obtenerProductos(
         widget.presupuestoId!,
       );
@@ -934,24 +922,15 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       }
 
       nombreController.text = (presupuesto['nombreCliente'] ?? '').toString();
-
       telefonoController.text = (presupuesto['telefono'] ?? '').toString();
-
       correoController.text = (presupuesto['correo'] ?? '').toString();
-
       direccionController.text = (presupuesto['direccion'] ?? '').toString();
-
       colorSeleccionado = (presupuesto['color'] ?? 'MATE').toString();
-
       clienteSeleccionadoId = (presupuesto['clienteId'] as num?)?.toInt();
-
       observacionesAdicionalesController.text =
           (presupuesto['observacionesAdicionales'] ?? '').toString();
-
       descuentoTipo = (presupuesto['descuentoTipo'] ?? 'NINGUNO').toString();
-
       final descuento = (presupuesto['descuento'] as num?)?.toDouble() ?? 0;
-
       if (descuentoTipo == 'PORCENTAJE') {
         descuentoController.text = descuento
             .toStringAsFixed(2)
@@ -961,34 +940,19 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       } else {
         descuentoController.clear();
       }
-
       aplicarIva = ((presupuesto['iva'] as num?)?.toDouble() ?? 0) > 0;
-
-      // ----------------------------------------------------------
-      // LIMPIAR PRODUCTOS ACTUALES
-      // ----------------------------------------------------------
 
       for (final item in items) {
         item.dispose();
       }
-
       items.clear();
-
-      // ----------------------------------------------------------
-      // CARGAR PRODUCTOS
-      // ----------------------------------------------------------
 
       if (productos.isEmpty) {
         items.add(ItemPresupuesto());
       } else {
         for (final producto in productos) {
           final item = ItemPresupuesto();
-
           item.producto = producto['producto']?.toString();
-
-          // ------------------------------------------------------
-          // CAMPOS DE LAS 5 MEDIDAS
-          // ------------------------------------------------------
 
           final campos = [
             ['ancho', 'ancho2', 'alto', 'cantidad'],
@@ -998,71 +962,20 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
             ['ancho5', 'ancho2_5', 'alto5', 'cantidad5'],
           ];
 
-          // ------------------------------------------------------
-          // DETERMINAR CUÁNTAS MEDIDAS EXISTEN
-          // ------------------------------------------------------
-
-          int cantidadMedidas = 1;
-
-          for (int i = 1; i < campos.length; i++) {
-            final nombres = campos[i];
-
-            final ancho = (producto[nombres[0]] as num?)?.toDouble() ?? 0;
-
-            final ancho2 = (producto[nombres[1]] as num?)?.toDouble() ?? 0;
-
-            final alto = (producto[nombres[2]] as num?)?.toDouble() ?? 0;
-
-            final cantidad = (producto[nombres[3]] as num?)?.toDouble() ?? 0;
-
-            if (ancho > 0 || ancho2 > 0 || alto > 0 || cantidad > 0) {
-              cantidadMedidas = i + 1;
-            }
-          }
-
-          // ------------------------------------------------------
-          // CREAR LAS MEDIDAS NECESARIAS
-          // ------------------------------------------------------
-
-          item.medidas.clear();
-
-          for (int i = 0; i < cantidadMedidas; i++) {
-            item.medidas.add(MedidaPresupuesto());
-          }
-
-          // ------------------------------------------------------
-          // CARGAR DATOS DE CADA MEDIDA
-          // ------------------------------------------------------
-
-          for (int i = 0; i < cantidadMedidas; i++) {
+          for (int i = 0; i < item.medidas.length; i++) {
             final medida = item.medidas[i];
-            final nombres = campos[i];
+            final nomes = campos[i];
 
-            final ancho = (producto[nombres[0]] as num?)?.toDouble() ?? 0;
-
-            final ancho2 = (producto[nombres[1]] as num?)?.toDouble() ?? 0;
-
-            final alto = (producto[nombres[2]] as num?)?.toDouble() ?? 0;
-
-            final cantidad = (producto[nombres[3]] as num?)?.toDouble() ?? 1;
-
-            medida.ancho.text = ancho > 0 ? ancho.toStringAsFixed(0) : '';
-
-            medida.ancho2.text = ancho2 > 0 ? ancho2.toStringAsFixed(0) : '';
-
-            medida.alto.text = alto > 0 ? alto.toStringAsFixed(0) : '';
-
-            medida.cantidad.text = cantidad > 0
-                ? cantidad.toStringAsFixed(0)
-                : '1';
-          }
-
-          // ------------------------------------------------------
-          // ASEGURAR AL MENOS UNA MEDIDA
-          // ------------------------------------------------------
-
-          if (item.medidas.isEmpty) {
-            item.medidas.add(MedidaPresupuesto());
+            medida.ancho.text = ((producto[nomes[0]] as num?)?.toDouble() ?? 0)
+                .toStringAsFixed(0);
+            medida.ancho2.text = ((producto[nomes[1]] as num?)?.toDouble() ?? 0)
+                .toStringAsFixed(0);
+            medida.alto.text = ((producto[nomes[2]] as num?)?.toDouble() ?? 0)
+                .toStringAsFixed(0);
+            medida.cantidad.text =
+                ((producto[nomes[3]] as num?)?.toDouble() ?? 1).toStringAsFixed(
+                  0,
+                );
           }
 
           items.add(item);
@@ -1070,16 +983,11 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       }
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('No se pudo cargar el presupuesto: $e')),
       );
     } finally {
-      if (mounted) {
-        setState(() {
-          cargandoEdicion = false;
-        });
-      }
+      if (mounted) setState(() => cargandoEdicion = false);
     }
   }
 
@@ -1461,37 +1369,31 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
           observacionesAdicionales: observacionesAdicionalesController.text
               .trim(),
           productos: productos.map((producto) {
-            final medidasData = (producto['medidas'] as List?) ?? [];
-
-            final medidas = medidasData.map((medida) {
-              return MedidaImagen(
-                ancho: (medida['ancho'] as num?)?.toDouble() ?? 0,
-                ancho2: (medida['ancho2'] as num?)?.toDouble() ?? 0,
-                alto: (medida['alto'] as num?)?.toDouble() ?? 0,
-                cantidad: (medida['cantidad'] as num?)?.toDouble() ?? 1,
-                metrosCuadrados:
-                    (medida['metrosCuadrados'] as num?)?.toDouble() ?? 0,
-              );
-            }).toList();
-
             return ProductoImagen(
               producto: producto['producto'] as String,
+              ancho: (producto['ancho'] as num).toDouble(),
+              ancho2: (producto['ancho2'] as num).toDouble(),
+              alto: (producto['alto'] as num).toDouble(),
 
-              // Compatibilidad con la primera medida
-              ancho: medidas.isNotEmpty ? medidas[0].ancho : 0,
-              ancho2: medidas.isNotEmpty ? medidas[0].ancho2 : 0,
-              alto: medidas.isNotEmpty ? medidas[0].alto : 0,
-              cantidad: medidas.isNotEmpty ? medidas[0].cantidad : 1,
-
-              // TOTAL de las 5 medidas
-              metrosCuadrados:
-                  (producto['metrosCuadrados'] as num?)?.toDouble() ?? 0,
-
-              precioM2: (producto['precioM2'] as num?)?.toDouble() ?? 0,
-
-              total: (producto['total'] as num?)?.toDouble() ?? 0,
-
-              medidas: medidas,
+              cantidad: (producto['cantidad'] as num).toDouble(),
+              metrosCuadrados: (producto['metrosCuadrados'] as num).toDouble(),
+              precioM2: (producto['precioM2'] as num).toDouble(),
+              total: (producto['total'] as num).toDouble(),
+              medidas: (producto['medidas'] as List<dynamic>? ?? [])
+                  .map((medida) {
+                    return MedidaImagen(
+                      ancho: (medida['ancho'] as num?)?.toDouble() ?? 0,
+                      ancho2: (medida['ancho2'] as num?)?.toDouble() ?? 0,
+                      alto: (medida['alto'] as num?)?.toDouble() ?? 0,
+                      cantidad: (medida['cantidad'] as num?)?.toDouble() ?? 1,
+                      metrosCuadrados:
+                          (medida['metrosCuadrados'] as num?)?.toDouble() ?? 0,
+                    );
+                  })
+                  .where((medida) {
+                    return medida.ancho > 0 && medida.alto > 0;
+                  })
+                  .toList(),
             );
           }).toList(),
         ),
@@ -2117,6 +2019,31 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
       );
     }
 
+    Widget campoMedida(TextEditingController controller, String hint) {
+      return SizedBox(
+        height: 38,
+        child: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 12),
+          decoration: decoracionMedida(hint),
+          onChanged: (_) => setState(() {}),
+        ),
+      );
+    }
+
+    Widget encabezado(String texto, {required int flex}) {
+      return Expanded(
+        flex: flex,
+        child: Text(
+          texto,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        ),
+      );
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 18),
       elevation: 3,
@@ -2206,12 +2133,12 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+                  horizontal: 10,
+                  vertical: 8,
                 ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0EAF7),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
                   'Medidas del producto (hasta 5 líneas)',
@@ -2223,214 +2150,75 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
               // ------------------------------------------------
               // ENCABEZADOS
               // ------------------------------------------------
               Row(
                 children: [
-                  Expanded(
-                    flex: 5,
-                    child: const Text(
-                      'Ancho (mm)',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  encabezado(
+                    esShowerDoorDosAnchos ? 'Ancho 1 (mm)' : 'Ancho (mm)',
+                    flex: esShowerDoorDosAnchos ? 1 : 2,
                   ),
-
                   if (esShowerDoorDosAnchos)
-                    Expanded(
-                      flex: 5,
-                      child: const Text(
-                        'Ancho 2',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
-                  Expanded(
-                    flex: 5,
-                    child: const Text(
-                      'Alto (mm)',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  Expanded(
-                    flex: 4,
-                    child: const Text(
-                      'Cantidad',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  Expanded(
-                    flex: 3,
-                    child: const Text(
-                      'm²',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  Expanded(
-                    flex: 5,
-                    child: const Text(
-                      'Subtotal',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
+                    encabezado('Ancho 2 (mm)', flex: 1),
+                  encabezado('Alto (mm)', flex: esShowerDoorDosAnchos ? 1 : 2),
+                  encabezado('Cantidad', flex: esShowerDoorDosAnchos ? 1 : 2),
+                  encabezado('m²', flex: esShowerDoorDosAnchos ? 1 : 2),
+                  encabezado('Subtotal', flex: esShowerDoorDosAnchos ? 1 : 3),
                   const SizedBox(width: 28),
                 ],
               ),
 
-              const SizedBox(height: 6),
+              const SizedBox(height: 4),
 
               // ------------------------------------------------
-              // MEDIDAS DINÁMICAS
+              // 5 MEDIDAS
               // ------------------------------------------------
               ...List.generate(item.medidas.length, (medidaIndex) {
                 final medida = item.medidas[medidaIndex];
-
-                final ancho =
-                    double.tryParse(medida.ancho.text.replaceAll(',', '.')) ??
-                    0;
-
-                final alto =
-                    double.tryParse(medida.alto.text.replaceAll(',', '.')) ?? 0;
-
-                final cantidad =
-                    double.tryParse(
-                      medida.cantidad.text.replaceAll(',', '.'),
-                    ) ??
-                    1;
-
-                final ancho2 =
-                    double.tryParse(medida.ancho2.text.replaceAll(',', '.')) ??
-                    0;
-
-                final m2 = esShowerDoorDosAnchos
-                    ? ((ancho + ancho2) * alto * cantidad) / 1000000
-                    : (ancho * alto * cantidad) / 1000000;
-
+                final m2 = medida.metrosCuadrados;
                 final subtotalLinea = m2 * item.precioM2;
 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 7),
+                  margin: const EdgeInsets.only(bottom: 5),
                   child: Row(
                     children: [
-                      // ------------------------------------------
-                      // ANCHO
-                      // ------------------------------------------
-
                       Expanded(
-                        flex: 5,
+                        flex: esShowerDoorDosAnchos ? 1 : 2,
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: SizedBox(
-                            height: 40,
-                            child: TextField(
-                              controller: medida.ancho,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12),
-                              decoration: decoracionMedida('1200'),
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
+                          padding: const EdgeInsets.only(right: 5),
+                          child: campoMedida(medida.ancho, '1200'),
                         ),
                       ),
 
-                      // ------------------------------------------
-                      // ANCHO 2
-                      // ------------------------------------------
                       if (esShowerDoorDosAnchos)
                         Expanded(
-                          flex: 5,
+                          flex: 1,
                           child: Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: SizedBox(
-                              height: 40,
-                              child: TextField(
-                                controller: medida.ancho2,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(fontSize: 12),
-                                decoration: decoracionMedida('1200'),
-                                onChanged: (_) => setState(() {}),
-                              ),
-                            ),
+                            padding: const EdgeInsets.only(right: 5),
+                            child: campoMedida(medida.ancho2, '1200'),
                           ),
                         ),
 
-                      // ------------------------------------------
-                      // ALTO
-                      // ------------------------------------------
                       Expanded(
-                        flex: 5,
+                        flex: esShowerDoorDosAnchos ? 1 : 2,
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: SizedBox(
-                            height: 40,
-                            child: TextField(
-                              controller: medida.alto,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12),
-                              decoration: decoracionMedida('2000'),
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
+                          padding: const EdgeInsets.only(right: 5),
+                          child: campoMedida(medida.alto, '2000'),
                         ),
                       ),
 
-                      // ------------------------------------------
-                      // CANTIDAD
-                      // ------------------------------------------
                       Expanded(
-                        flex: 4,
+                        flex: esShowerDoorDosAnchos ? 1 : 2,
                         child: Padding(
-                          padding: const EdgeInsets.only(right: 4),
+                          padding: const EdgeInsets.only(right: 5),
                           child: SizedBox(
-                            height: 40,
+                            height: 38,
                             child: TextField(
                               controller: medida.cantidad,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                    decimal: true,
-                                  ),
+                              keyboardType: TextInputType.number,
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 12),
                               decoration: decoracionMedida('1'),
@@ -2440,16 +2228,33 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                         ),
                       ),
 
-                      // ------------------------------------------
-                      // M2
-                      // ------------------------------------------
                       Expanded(
-                        flex: 3,
+                        flex: esShowerDoorDosAnchos ? 1 : 2,
                         child: SizedBox(
-                          height: 40,
+                          height: 38,
                           child: Center(
                             child: Text(
                               m2.toStringAsFixed(2).replaceAll('.', ','),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF123B5D),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      Expanded(
+                        flex: esShowerDoorDosAnchos ? 1 : 3,
+                        child: SizedBox(
+                          height: 38,
+                          child: Center(
+                            child: Text(
+                              subtotalLinea > 0
+                                  ? dinero(subtotalLinea)
+                                  : '\$ 0',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontSize: 10,
@@ -2461,32 +2266,6 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                         ),
                       ),
 
-                      // ------------------------------------------
-                      // SUBTOTAL
-                      // ------------------------------------------
-                      Expanded(
-                        flex: 5,
-                        child: SizedBox(
-                          height: 40,
-                          child: Center(
-                            child: Text(
-                              subtotalLinea > 0
-                                  ? dinero(subtotalLinea)
-                                  : '\$ 0',
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF123B5D),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // ------------------------------------------
-                      // ELIMINAR / LIMPIAR MEDIDA
-                      // ------------------------------------------
                       SizedBox(
                         width: 28,
                         child: IconButton(
@@ -2515,41 +2294,8 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                 );
               }),
 
-              const SizedBox(height: 5),
+              const SizedBox(height: 4),
 
-              // ------------------------------------------------
-              // AÑADIR MEDIDA
-              // ------------------------------------------------
-              if (item.medidas.length < 5)
-                SizedBox(
-                  width: double.infinity,
-                  height: 42,
-                  child: OutlinedButton.icon(
-                    onPressed: () {
-                      agregarMedida(item);
-                    },
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text(
-                      'AÑADIR MEDIDA',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF4B208F),
-                      side: const BorderSide(
-                        color: Color(0xFF4B208F),
-                        width: 1.5,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-                ),
-
-              const SizedBox(height: 8),
               // ------------------------------------------------
               // TOTAL PRODUCTO
               // ------------------------------------------------

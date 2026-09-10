@@ -1043,7 +1043,6 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
           bottom: BorderSide(color: Color(0xFFD4DDE4)),
         ),
       ),
-
       child: Column(
         children: [
           ...List.generate(medidas.length, (medidaIndex) {
@@ -1058,11 +1057,73 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                 : '${medida.ancho.toStringAsFixed(0)} × '
                       '${medida.alto.toStringAsFixed(0)} mm';
 
-            final subtotalLinea = medida.metrosCuadrados * producto.precioM2;
+            // ==================================================
+            // CANTIDAD Y M² POR UNIDAD
+            // ==================================================
+
+            final cantidad = medida.cantidad > 0 ? medida.cantidad : 1;
+
+            final m2Unitarios = cantidad > 0
+                ? medida.metrosCuadrados / cantidad
+                : medida.metrosCuadrados;
+
+            // ==================================================
+            // PRODUCTOS CON PRECIO FIJO
+            // ==================================================
+
+            final productosPrecioFijo = {
+              'Shower Door 2 hojas',
+              'Shower Door Esquinero',
+              'Shower Door 2 hojas con fijo',
+              'Puerta AM35',
+              'Puerta AM35 con placas',
+            };
+
+            // ==================================================
+            // VIDRIOS Y ESPEJOS
+            // CALCULAN EL M² REAL SIN MÍNIMO
+            // ==================================================
+
+            final productosVidrioEspejo = {
+              'Vidrio 4 mm',
+              'Vidrio 5 mm',
+              'Termopanel',
+              'Espejo',
+              'Semilla',
+            };
+
+            // ==================================================
+            // VALOR UNITARIO
+            // ==================================================
+
+            double valorUnitario;
+
+            if (productosPrecioFijo.contains(producto.producto)) {
+              // PRECIO FIJO
+              valorUnitario = producto.precioM2;
+            } else if (productosVidrioEspejo.contains(producto.producto)) {
+              // VIDRIOS Y ESPEJOS:
+              // siempre se cobra el m² real.
+              valorUnitario = m2Unitarios * producto.precioM2;
+            } else if (m2Unitarios < 1) {
+              // PRODUCTOS POR M²:
+              // si la medida es menor a 1 m²,
+              // se cobra al menos el 85% del valor de 1 m².
+              valorUnitario = producto.precioM2 * 0.85;
+            } else {
+              // 1 m² o más:
+              // se cobra el m² real.
+              valorUnitario = m2Unitarios * producto.precioM2;
+            }
+
+            // ==================================================
+            // VALOR TOTAL SEGÚN CANTIDAD
+            // ==================================================
+
+            final subtotalLinea = valorUnitario * cantidad;
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9),
-
               decoration: BoxDecoration(
                 color: medidaIndex.isEven
                     ? Colors.white
@@ -1071,12 +1132,13 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                     ? const Border(bottom: BorderSide(color: Color(0xFFE1E6EA)))
                     : null,
               ),
-
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
-
                 children: [
+                  // ==================================================
                   // DESCRIPCIÓN
+                  // ==================================================
+
                   Expanded(
                     flex: 4,
                     child: Text(
@@ -1089,7 +1151,9 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                     ),
                   ),
 
+                  // ==================================================
                   // MEDIDA
+                  // ==================================================
                   Expanded(
                     flex: 3,
                     child: Column(
@@ -1102,9 +1166,7 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-
                         const SizedBox(height: 2),
-
                         Text(
                           '${medida.metrosCuadrados.toStringAsFixed(2)} m²',
                           style: const TextStyle(
@@ -1116,7 +1178,9 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                     ),
                   ),
 
+                  // ==================================================
                   // CANTIDAD
+                  // ==================================================
                   SizedBox(
                     width: 55,
                     child: Text(
@@ -1126,17 +1190,21 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
                     ),
                   ),
 
+                  // ==================================================
                   // VALOR UNITARIO
+                  // ==================================================
                   SizedBox(
                     width: 105,
                     child: Text(
-                      dinero(subtotalLinea),
+                      dinero(valorUnitario),
                       textAlign: TextAlign.right,
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),
 
-                  // SUBTOTAL
+                  // ==================================================
+                  // VALOR TOTAL
+                  // ==================================================
                   SizedBox(
                     width: 115,
                     child: Text(
@@ -1154,7 +1222,9 @@ class _PresupuestoImagenState extends State<PresupuestoImagen> {
             );
           }),
 
+          // ==========================================================
           // TOTAL DEL PRODUCTO
+          // ==========================================================
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

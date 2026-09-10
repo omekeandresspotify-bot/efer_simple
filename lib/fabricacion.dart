@@ -1015,6 +1015,20 @@ class PautaFabricacionGeneralPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final resultados = <ResultadoFabricacion>[];
 
+    debugPrint('===== PAUTA GENERAL =====');
+    debugPrint('PRODUCTOS RECIBIDOS: ${productos.length}');
+
+    for (final producto in productos) {
+      debugPrint(
+        'PRODUCTO: ${producto['producto']} | '
+        'M1=${producto['ancho']}x${producto['alto']} | '
+        'M2=${producto['ancho2_m2']}x${producto['alto2']} | '
+        'M3=${producto['ancho3']}x${producto['alto3']}',
+      );
+    }
+
+    debugPrint('INICIO PAUTA - PRODUCTOS: ${productos.length}');
+
     final errores = <String>[];
 
     // ==========================================================
@@ -1024,39 +1038,62 @@ class PautaFabricacionGeneralPage extends StatelessWidget {
     for (final producto in productos) {
       final nombre = producto['producto']?.toString() ?? 'Producto';
 
-      // Cada grupo corresponde a una medida agregada al presupuesto.
-      final campos = [
-        ['ancho', 'ancho2', 'alto', 'cantidad'],
-        ['ancho2_m2', 'ancho2_2', 'alto2', 'cantidad2'],
-        ['ancho3', 'ancho2_3', 'alto3', 'cantidad3'],
-        ['ancho4', 'ancho2_4', 'alto4', 'cantidad4'],
-        ['ancho5', 'ancho2_5', 'alto5', 'cantidad5'],
+      final medidas = <Map<String, dynamic>>[
+        {
+          'ancho': producto['ancho'],
+          'ancho2': producto['ancho2'],
+          'alto': producto['alto'],
+          'cantidad': producto['cantidad'],
+        },
+        {
+          'ancho': producto['ancho2_m2'],
+          'ancho2': producto['ancho2_2'],
+          'alto': producto['alto2'],
+          'cantidad': producto['cantidad2'],
+        },
+        {
+          'ancho': producto['ancho3'],
+          'ancho2': producto['ancho2_3'],
+          'alto': producto['alto3'],
+          'cantidad': producto['cantidad3'],
+        },
+        {
+          'ancho': producto['ancho4'],
+          'ancho2': producto['ancho2_4'],
+          'alto': producto['alto4'],
+          'cantidad': producto['cantidad4'],
+        },
+        {
+          'ancho': producto['ancho5'],
+          'ancho2': producto['ancho2_5'],
+          'alto': producto['alto5'],
+          'cantidad': producto['cantidad5'],
+        },
       ];
 
-      for (int i = 0; i < campos.length; i++) {
-        final nombres = campos[i];
+      for (int i = 0; i < medidas.length; i++) {
+        final medida = medidas[i];
 
-        final ancho =
-            double.tryParse(producto[nombres[0]]?.toString() ?? '') ?? 0;
+        double numero(dynamic valor) {
+          if (valor is num) {
+            return valor.toDouble();
+          }
 
-        final ancho2 =
-            double.tryParse(producto[nombres[1]]?.toString() ?? '') ?? 0;
-
-        final alto =
-            double.tryParse(producto[nombres[2]]?.toString() ?? '') ?? 0;
-
-        final cantidadValor =
-            double.tryParse(producto[nombres[3]]?.toString() ?? '') ?? 0;
-
-        // Una medida existe solamente si tiene dimensiones.
-        // No usamos "cantidad" para detectar si existe,
-        // porque las medidas nuevas pueden tener cantidad = 1
-        // aunque todavía estén vacías.
-        if (ancho <= 0 && ancho2 <= 0 && alto <= 0) {
-          continue;
+          return double.tryParse(
+                valor?.toString().replaceAll(',', '.') ?? '',
+              ) ??
+              0;
         }
 
-        final cantidad = cantidadValor > 0 ? cantidadValor.round() : 1;
+        final ancho = numero(medida['ancho']);
+        final ancho2 = numero(medida['ancho2']);
+        final alto = numero(medida['alto']);
+        final cantidad = numero(medida['cantidad']).round();
+
+        // Medida vacía → no hacer nada.
+        if (ancho <= 0 || alto <= 0) {
+          continue;
+        }
 
         try {
           final resultado = PautaFabricacion.generar(
@@ -1064,14 +1101,47 @@ class PautaFabricacionGeneralPage extends StatelessWidget {
             ancho: ancho,
             ancho2: ancho2 > 0 ? ancho2 : null,
             alto: alto,
-            cantidadVentanas: cantidad,
+            cantidadVentanas: cantidad > 0 ? cantidad : 1,
           );
 
           resultados.add(resultado);
-        } catch (_) {
-          errores.add('$nombre - Medida ${i + 1}');
+
+          debugPrint(
+            'PAUTA OK → $nombre | '
+            'M${i + 1} | '
+            '${ancho.toInt()} x ${alto.toInt()} | '
+            'cantidad ${cantidad > 0 ? cantidad : 1}',
+          );
+        } catch (e) {
+          debugPrint(
+            'PAUTA ERROR → $nombre | '
+            'M${i + 1} | '
+            '${ancho.toInt()} x ${alto.toInt()} | '
+            '$e',
+          );
+
+          if (e is ArgumentError &&
+              e.message.toString().contains(
+                'Producto sin pauta de fabricación',
+              )) {
+            continue;
+          }
+
+          errores.add(
+            '$nombre - M${i + 1} - '
+            '${ancho.toInt()} × ${alto.toInt()} mm',
+          );
         }
       }
+    }
+    debugPrint('TOTAL PAUTAS: ${resultados.length}');
+
+    for (final r in resultados) {
+      debugPrint(
+        'RESULTADO: ${r.producto} | '
+        '${r.anchoVentana} x ${r.altoVentana} | '
+        'cantidad ${r.cantidadVentanas}',
+      );
     }
 
     return Scaffold(
@@ -1208,8 +1278,8 @@ class PautaFabricacionGeneralPage extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  ...resultados.map((resultado) {
-                    return _tarjetaResultado(resultado);
+                  ...List.generate(resultados.length, (index) {
+                    return _tarjetaResultado(resultados[index], index);
                   }),
 
                   // ==================================================
@@ -1369,93 +1439,142 @@ class PautaFabricacionGeneralPage extends StatelessWidget {
   // TARJETA RESULTADO
   // ==========================================================
 
-  Widget _tarjetaResultado(ResultadoFabricacion resultado) {
+  Widget _tarjetaResultado(ResultadoFabricacion resultado, int index) {
     return Card(
+      key: ValueKey(
+        '${resultado.producto}_${resultado.anchoVentana}_${resultado.altoVentana}_$index',
+      ),
+
       margin: const EdgeInsets.only(bottom: 12),
 
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
 
-      child: ExpansionTile(
-        leading: Container(
-          width: 42,
-          height: 42,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
 
-          decoration: BoxDecoration(
-            color: const Color(0xFFF0E5F5),
-            borderRadius: BorderRadius.circular(12),
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
 
-          child: const Icon(Icons.window_outlined, color: Color(0xFF6A1B9A)),
-        ),
+          children: [
+            // ==================================================
+            // ENCABEZADO DE LA PAUTA
+            // ==================================================
 
-        title: Text(
-          resultado.producto,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-        ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
 
-        subtitle: Text(
-          '${resultado.anchoVentana.toStringAsFixed(0)} × '
-          '${resultado.altoVentana.toStringAsFixed(0)} mm'
-          ' • × ${resultado.cantidadVentanas}',
-        ),
-
-        children: [
-          const Divider(height: 1),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-
-            child: Column(
               children: [
-                ...resultado.cortes.map((corte) {
-                  String medida;
+                Container(
+                  width: 42,
+                  height: 42,
 
-                  if (corte.ancho != null && corte.alto != null) {
-                    medida =
-                        '${corte.ancho!.toStringAsFixed(0)} × '
-                        '${corte.alto!.toStringAsFixed(0)} mm';
-                  } else if (corte.ancho != null) {
-                    medida = '${corte.ancho!.toStringAsFixed(0)} mm';
-                  } else if (corte.alto != null) {
-                    medida = '${corte.alto!.toStringAsFixed(0)} mm';
-                  } else {
-                    medida = '-';
-                  }
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF0E5F5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
 
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: const Icon(
+                    Icons.window_outlined,
+                    color: Color(0xFF6A1B9A),
+                  ),
+                ),
 
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            corte.pieza,
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+
+                    children: [
+                      Text(
+                        'PAUTA ${index + 1}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.bold,
                         ),
+                      ),
 
-                        Text(
-                          medida,
-                          style: TextStyle(color: Colors.grey.shade700),
+                      const SizedBox(height: 3),
+
+                      Text(
+                        resultado.producto,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
                         ),
+                      ),
 
-                        const SizedBox(width: 10),
+                      const SizedBox(height: 4),
 
-                        Text(
-                          '×${corte.cantidad}',
-                          style: const TextStyle(
-                            color: Color(0xFF6A1B9A),
-                            fontWeight: FontWeight.bold,
-                          ),
+                      Text(
+                        '${resultado.anchoVentana.toStringAsFixed(0)} × '
+                        '${resultado.altoVentana.toStringAsFixed(0)} mm'
+                        ' • × ${resultado.cantidadVentanas}',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 13,
                         ),
-                      ],
-                    ),
-                  );
-                }),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+
+            const SizedBox(height: 14),
+
+            const Divider(),
+
+            const SizedBox(height: 8),
+
+            // ==================================================
+            // CORTES
+            // ==================================================
+            ...resultado.cortes.map((corte) {
+              String medida;
+
+              if (corte.ancho != null && corte.alto != null) {
+                medida =
+                    '${corte.ancho!.toStringAsFixed(0)} × '
+                    '${corte.alto!.toStringAsFixed(0)} mm';
+              } else if (corte.ancho != null) {
+                medida = '${corte.ancho!.toStringAsFixed(0)} mm';
+              } else if (corte.alto != null) {
+                medida = '${corte.alto!.toStringAsFixed(0)} mm';
+              } else {
+                medida = '-';
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        corte.pieza,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+
+                    Text(medida, style: TextStyle(color: Colors.grey.shade700)),
+
+                    const SizedBox(width: 12),
+
+                    Text(
+                      '× ${corte.cantidad}',
+                      style: const TextStyle(
+                        color: Color(0xFF6A1B9A),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
