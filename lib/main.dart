@@ -794,13 +794,7 @@ class MedidaPresupuesto {
 class ItemPresupuesto {
   String? producto;
 
-  final List<MedidaPresupuesto> medidas = [
-    MedidaPresupuesto(),
-    MedidaPresupuesto(),
-    MedidaPresupuesto(),
-    MedidaPresupuesto(),
-    MedidaPresupuesto(),
-  ];
+  final List<MedidaPresupuesto> medidas = [MedidaPresupuesto()];
 
   TextEditingController get ancho => medidas[0].ancho;
   TextEditingController get ancho2 => medidas[0].ancho2;
@@ -833,6 +827,24 @@ class ItemPresupuesto {
     }
 
     return metrosCuadrados * precioM2;
+  }
+
+  double valorTotalMedida(MedidaPresupuesto medida) {
+    final cantidad = double.tryParse(medida.cantidad.text) ?? 0;
+
+    const productosPrecioFijo = {
+      'Shower Door 2 hojas',
+      'Shower Door Esquinero',
+      'Shower Door 2 hojas con fijo',
+      'Puerta AM35',
+      'Puerta AM35 con placas',
+    };
+
+    if (productosPrecioFijo.contains(producto)) {
+      return cantidad * precioM2;
+    }
+
+    return medida.metrosCuadrados * precioM2;
   }
 
   void dispose() {
@@ -1091,6 +1103,13 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
     });
   }
 
+  void agregarMedida(ItemPresupuesto item) {
+    setState(() {
+      if (item.medidas.length < 5) {
+        item.medidas.add(MedidaPresupuesto());
+      }
+    });
+  }
   // ==========================================================
   // ELIMINAR PRODUCTO
   // ==========================================================
@@ -2006,6 +2025,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
 
   Widget construirProducto(int index) {
     final item = items[index];
+
     final esShowerDoorDosAnchos =
         item.producto == 'Shower Door Esquinero' ||
         item.producto == 'Shower Door 2 hojas con fijo';
@@ -2013,7 +2033,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
     InputDecoration decoracionMedida(String hint) {
       return InputDecoration(
         hintText: hint,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
       );
@@ -2021,7 +2041,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
 
     Widget campoMedida(TextEditingController controller, String hint) {
       return SizedBox(
-        height: 38,
+        height: 40,
         child: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -2056,6 +2076,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
             // --------------------------------------------------
             // ENCABEZADO PRODUCTO
             // --------------------------------------------------
+
             Row(
               children: [
                 Text(
@@ -2066,7 +2087,9 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                     color: Color(0xFF123B5D),
                   ),
                 ),
+
                 const Spacer(),
+
                 if (items.length > 1)
                   IconButton(
                     tooltip: 'Eliminar producto',
@@ -2093,6 +2116,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
             InkWell(
               onTap: () async {
                 final producto = await seleccionarProducto();
+
                 if (!mounted) return;
 
                 if (producto != null) {
@@ -2157,68 +2181,120 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
               // ------------------------------------------------
               Row(
                 children: [
+                  const SizedBox(
+                    width: 24,
+                    child: Text(
+                      '#',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+
                   encabezado(
                     esShowerDoorDosAnchos ? 'Ancho 1 (mm)' : 'Ancho (mm)',
-                    flex: esShowerDoorDosAnchos ? 1 : 2,
+                    flex: 3,
                   ),
+
                   if (esShowerDoorDosAnchos)
-                    encabezado('Ancho 2 (mm)', flex: 1),
-                  encabezado('Alto (mm)', flex: esShowerDoorDosAnchos ? 1 : 2),
-                  encabezado('Cantidad', flex: esShowerDoorDosAnchos ? 1 : 2),
-                  encabezado('m²', flex: esShowerDoorDosAnchos ? 1 : 2),
-                  encabezado('Subtotal', flex: esShowerDoorDosAnchos ? 1 : 3),
+                    encabezado('Ancho 2 (mm)', flex: 3),
+
+                  encabezado('Alto (mm)', flex: 3),
+
+                  encabezado('Cantidad', flex: 2),
+
+                  encabezado('m²', flex: 2),
+
+                  encabezado('Subtotal', flex: 3),
+
                   const SizedBox(width: 28),
                 ],
               ),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
 
               // ------------------------------------------------
-              // 5 MEDIDAS
+              // SOLO LAS MEDIDAS QUE EXISTEN
               // ------------------------------------------------
               ...List.generate(item.medidas.length, (medidaIndex) {
                 final medida = item.medidas[medidaIndex];
+
                 final m2 = medida.metrosCuadrados;
-                final subtotalLinea = m2 * item.precioM2;
+
+                final subtotalLinea = item.valorTotalMedida(medida);
 
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 5),
+                  margin: const EdgeInsets.only(bottom: 6),
+
                   child: Row(
                     children: [
+                      // --------------------------------------
+                      // NUMERO
+                      // --------------------------------------
+
+                      SizedBox(
+                        width: 24,
+                        child: Text(
+                          '${medidaIndex + 1}',
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      // --------------------------------------
+                      // ANCHO 1
+                      // --------------------------------------
                       Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
+                        flex: 3,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: campoMedida(medida.ancho, '1200'),
                         ),
                       ),
 
+                      // --------------------------------------
+                      // ANCHO 2
+                      // --------------------------------------
                       if (esShowerDoorDosAnchos)
                         Expanded(
-                          flex: 1,
+                          flex: 3,
                           child: Padding(
                             padding: const EdgeInsets.only(right: 5),
                             child: campoMedida(medida.ancho2, '1200'),
                           ),
                         ),
 
+                      // --------------------------------------
+                      // ALTO
+                      // --------------------------------------
                       Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
+                        flex: 3,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: campoMedida(medida.alto, '2000'),
                         ),
                       ),
 
+                      // --------------------------------------
+                      // CANTIDAD
+                      // --------------------------------------
                       Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
+                        flex: 2,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: SizedBox(
-                            height: 38,
+                            height: 40,
                             child: TextField(
                               controller: medida.cantidad,
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                    decimal: true,
+                                  ),
                               textAlign: TextAlign.center,
                               style: const TextStyle(fontSize: 12),
                               decoration: decoracionMedida('1'),
@@ -2228,33 +2304,16 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                         ),
                       ),
 
+                      // --------------------------------------
+                      // M2
+                      // --------------------------------------
                       Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 2,
+                        flex: 2,
                         child: SizedBox(
-                          height: 38,
+                          height: 40,
                           child: Center(
                             child: Text(
                               m2.toStringAsFixed(2).replaceAll('.', ','),
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF123B5D),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      Expanded(
-                        flex: esShowerDoorDosAnchos ? 1 : 3,
-                        child: SizedBox(
-                          height: 38,
-                          child: Center(
-                            child: Text(
-                              subtotalLinea > 0
-                                  ? dinero(subtotalLinea)
-                                  : '\$ 0',
                               textAlign: TextAlign.center,
                               style: const TextStyle(
                                 fontSize: 10,
@@ -2266,6 +2325,32 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                         ),
                       ),
 
+                      // --------------------------------------
+                      // SUBTOTAL
+                      // --------------------------------------
+                      Expanded(
+                        flex: 3,
+                        child: SizedBox(
+                          height: 40,
+                          child: Center(
+                            child: Text(
+                              subtotalLinea > 0
+                                  ? dinero(subtotalLinea)
+                                  : '\$ 0',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF123B5D),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // --------------------------------------
+                      // ELIMINAR MEDIDA
+                      // --------------------------------------
                       SizedBox(
                         width: 28,
                         child: IconButton(
@@ -2276,10 +2361,18 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                           ),
                           onPressed: () {
                             setState(() {
-                              medida.ancho.clear();
-                              medida.ancho2.clear();
-                              medida.alto.clear();
-                              medida.cantidad.text = '1';
+                              if (item.medidas.length > 1) {
+                                final eliminada = item.medidas.removeAt(
+                                  medidaIndex,
+                                );
+
+                                eliminada.dispose();
+                              } else {
+                                medida.ancho.clear();
+                                medida.ancho2.clear();
+                                medida.alto.clear();
+                                medida.cantidad.text = '1';
+                              }
                             });
                           },
                           icon: const Icon(
@@ -2294,7 +2387,41 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                 );
               }),
 
-              const SizedBox(height: 4),
+              const SizedBox(height: 5),
+
+              // ------------------------------------------------
+              // AÑADIR MEDIDA
+              // ------------------------------------------------
+              if (item.medidas.length < 5)
+                SizedBox(
+                  width: double.infinity,
+                  height: 42,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      agregarMedida(item);
+                    },
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text(
+                      'AÑADIR MEDIDA',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF4B208F),
+                      side: const BorderSide(
+                        color: Color(0xFF4B208F),
+                        width: 1.5,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+
+              const SizedBox(height: 8),
 
               // ------------------------------------------------
               // TOTAL PRODUCTO
@@ -2318,7 +2445,9 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const Spacer(),
+
                     Text(
                       '${item.metrosCuadrados.toStringAsFixed(2)} m²',
                       style: const TextStyle(
@@ -2326,7 +2455,9 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     const SizedBox(width: 15),
+
                     Text(
                       dinero(item.total),
                       style: const TextStyle(
