@@ -974,20 +974,47 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
             ['ancho5', 'ancho2_5', 'alto5', 'cantidad5'],
           ];
 
-          for (int i = 0; i < item.medidas.length; i++) {
-            final medida = item.medidas[i];
+          double numero(dynamic valor) {
+            if (valor is num) {
+              return valor.toDouble();
+            }
+
+            return double.tryParse(valor?.toString() ?? '0') ?? 0;
+          }
+
+          // ----------------------------------------------------------
+          // CARGAR TODAS LAS MEDIDAS QUE REALMENTE EXISTEN
+          // ----------------------------------------------------------
+
+          for (int i = 0; i < campos.length; i++) {
             final nomes = campos[i];
 
-            medida.ancho.text = ((producto[nomes[0]] as num?)?.toDouble() ?? 0)
-                .toStringAsFixed(0);
-            medida.ancho2.text = ((producto[nomes[1]] as num?)?.toDouble() ?? 0)
-                .toStringAsFixed(0);
-            medida.alto.text = ((producto[nomes[2]] as num?)?.toDouble() ?? 0)
-                .toStringAsFixed(0);
-            medida.cantidad.text =
-                ((producto[nomes[3]] as num?)?.toDouble() ?? 1).toStringAsFixed(
-                  0,
-                );
+            final ancho = numero(producto[nomes[0]]);
+            final ancho2 = numero(producto[nomes[1]]);
+            final alto = numero(producto[nomes[2]]);
+            final cantidad = numero(producto[nomes[3]]);
+
+            // La primera medida ya existe.
+            // Las siguientes se crean solamente si tienen datos.
+            if (i > 0) {
+              if (ancho <= 0 && ancho2 <= 0 && alto <= 0) {
+                continue;
+              }
+
+              item.medidas.add(MedidaPresupuesto());
+            }
+
+            final medida = item.medidas.last;
+
+            medida.ancho.text = ancho > 0 ? ancho.toStringAsFixed(0) : '';
+
+            medida.ancho2.text = ancho2 > 0 ? ancho2.toStringAsFixed(0) : '';
+
+            medida.alto.text = alto > 0 ? alto.toStringAsFixed(0) : '';
+
+            medida.cantidad.text = cantidad > 0
+                ? cantidad.toStringAsFixed(0)
+                : '1';
           }
 
           items.add(item);
@@ -2250,7 +2277,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                       // ANCHO 1
                       // --------------------------------------
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: campoMedida(medida.ancho, '1200'),
@@ -2262,7 +2289,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                       // --------------------------------------
                       if (esShowerDoorDosAnchos)
                         Expanded(
-                          flex: 3,
+                          flex: 4,
                           child: Padding(
                             padding: const EdgeInsets.only(right: 5),
                             child: campoMedida(medida.ancho2, '1200'),
@@ -2273,7 +2300,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                       // ALTO
                       // --------------------------------------
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: campoMedida(medida.alto, '2000'),
@@ -2329,7 +2356,7 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                       // SUBTOTAL
                       // --------------------------------------
                       Expanded(
-                        flex: 3,
+                        flex: 2,
                         child: SizedBox(
                           height: 40,
                           child: Center(
@@ -2422,53 +2449,6 @@ class _NuevoPresupuestoState extends State<NuevoPresupuesto> {
                 ),
 
               const SizedBox(height: 8),
-
-              // ------------------------------------------------
-              // TOTAL PRODUCTO
-              // ------------------------------------------------
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEAF2F8),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Text(
-                      'TOTAL PRODUCTO',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const Spacer(),
-
-                    Text(
-                      '${item.metrosCuadrados.toStringAsFixed(2)} m²',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-
-                    const SizedBox(width: 15),
-
-                    Text(
-                      dinero(item.total),
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF123B5D),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ],
         ),
